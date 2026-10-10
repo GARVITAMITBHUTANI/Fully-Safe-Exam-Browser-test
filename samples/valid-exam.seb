@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>startURL</key>
+    <string>https://example.edu/exam/session/4029</string>
+    <key>examTitle</key>
+    <string>Computer Science Midterm Examination</string>
+    <key>institution</key>
+    <string>Department of Engineering</string>
+    <key>browserWindowAllowReload</key>
+    <true/>
+    <key>fullscreen</key>
+    <true/>
+    <key>allowQuit</key>
+    <true/>
+    <key>urlFilterEnable</key>
+    <true/>
+    <key>urlFilterRules</key>
+    <array>
+        <dict>
+            <key>active</key>
+            <true/>
+            <key>regex</key>
+            <false/>
+            <key>expression</key>
+            <string>https://example.edu/*</string>
+        </dict>
+        <dict>
+            <key>active</key>
+            <true/>
+            <key>regex</key>
+            <false/>
+            <key>expression</key>
+            <string>https://auth.example.edu/*</string>
+        </dict>
+    </array>
+</dict>
+</plist>
+

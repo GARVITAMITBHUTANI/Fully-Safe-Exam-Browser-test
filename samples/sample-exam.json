@@ -1,0 +1,14 @@
+{
+  "startURL": "https://example.edu/exam/session/4029",
+  "examTitle": "Linear Algebra Final Exam",
+  "fullscreen": true,
+  "allowedUrls": [
+    "https://example.edu/*",
+    "https://cdn.example.edu/*"
+  ],
+  "browserWindowAllowReload": true,
+  "allowCopy": true,
+  "allowPaste": true,
+  "allowSelectAll": true
+}
+

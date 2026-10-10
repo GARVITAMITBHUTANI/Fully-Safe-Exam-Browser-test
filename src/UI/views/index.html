@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <title>Safe Exam Browser</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Custom Titlebar (visible only during config / error screens) -->
+  <div class="titlebar" id="titlebar">
+    <div class="titlebar-title">Safe Exam Browser</div>
+    <div class="titlebar-actions">
+      <span id="titlebar-status">READY</span>
+    </div>
+  </div>
+
+  <div class="view-container">
+
+    <!-- 1. START SCREEN -->
+    <div id="view-start" class="view active">
+      <div class="logo-badge">
+        <svg fill="none" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      </div>
+
+      <h1 class="app-title">Safe Exam Browser</h1>
+      <p class="app-subtitle">Examination Environment</p>
+
+      <div class="drop-zone" id="drop-zone">
+        <svg class="drop-zone-icon" width="36" height="36" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+        <p class="drop-zone-text">Open an exam configuration (.seb)</p>
+        <button class="btn btn-primary" id="btn-open-seb">Open .seb</button>
+      </div>
+
+      <div class="footer-version" id="footer-version">Safe Exam Browser 3.10.2</div>
+    </div>
+
+    <!-- 2. LOADING SCREEN -->
+    <div id="view-loading" class="view">
+      <h2 class="loading-title">Safe Exam Browser</h2>
+      <p class="loading-subtitle">Loading examination...</p>
+
+      <div class="progress-container">
+        <div class="progress-bar-indeterminate"></div>
+      </div>
+    </div>
+
+    <!-- 3. ERROR SCREEN -->
+    <div id="view-error" class="view">
+      <div class="error-icon-box">
+        <svg fill="none" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+
+      <h2 class="error-title">Unable to start examination</h2>
+      <p class="error-message" id="error-message-text">The exam configuration could not be loaded.</p>
+
+      <div class="error-actions">
+        <button class="btn btn-secondary" id="btn-try-again">Try Again</button>
+        <button class="btn btn-secondary" id="btn-close-app">Close</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 4. AUTHENTIC SAFE EXAM BROWSER BOTTOM TASKBAR -->
+  <div class="seb-taskbar" id="seb-taskbar">
+    <div class="seb-taskbar-left">
+      <div class="seb-dock-logo" title="Safe Exam Browser">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span>SEB</span>
+      </div>
+      <button class="seb-dock-btn" id="dock-btn-reload" title="Reload examination page">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 4v6h-6"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        <span>Reload</span>
+      </button>
+      <div class="seb-exam-label" id="seb-exam-label">Safe Exam Browser</div>
+    </div>
+
+    <div class="seb-taskbar-right">
+      <div class="seb-status-item" title="Network Connected">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#22c55e" stroke-width="2">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+          <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+          <line x1="12" y1="20" x2="12.01" y2="20"/>
+        </svg>
+      </div>
+
+      <div class="seb-status-item" title="Audio Enabled">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+      </div>
+
+      <div class="seb-clock" id="seb-clock">00:00:00</div>
+
+      <button class="seb-dock-btn seb-quit-btn" id="dock-btn-quit" title="Quit Safe Exam Browser">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span>Quit</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const views = {
+      start: document.getElementById('view-start'),
+      loading: document.getElementById('view-loading'),
+      error: document.getElementById('view-error'),
+    };
+
+    const titlebar = document.getElementById('titlebar');
+    const sebTaskbar = document.getElementById('seb-taskbar');
+    const statusBadge = document.getElementById('titlebar-status');
+    const errorMessageText = document.getElementById('error-message-text');
+    const dropZone = document.getElementById('drop-zone');
+    const btnOpenSeb = document.getElementById('btn-open-seb');
+    const btnTryAgain = document.getElementById('btn-try-again');
+    const btnCloseApp = document.getElementById('btn-close-app');
+    const footerVersion = document.getElementById('footer-version');
+    const dockBtnReload = document.getElementById('dock-btn-reload');
+    const dockBtnQuit = document.getElementById('dock-btn-quit');
+    const sebClock = document.getElementById('seb-clock');
+    const sebExamLabel = document.getElementById('seb-exam-label');
+
+    function updateClock() {
+      const now = new Date();
+      sebClock.textContent = now.toLocaleTimeString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function switchView(viewName) {
+      Object.keys(views).forEach(key => {
+        if (key === viewName) {
+          views[key].classList.add('active');
+        } else {
+          views[key].classList.remove('active');
+        }
+      });
+    }
+
+    // Initialize App Info
+    if (window.fsebAPI) {
+      window.fsebAPI.getAppInfo().then(info => {
+        footerVersion.textContent = `Safe Exam Browser 3.10.2`;
+      });
+
+      // Listen for session state updates
+      window.fsebAPI.onStateUpdate((state, details) => {
+        if (statusBadge) statusBadge.textContent = state;
+
+        switch (state) {
+          case 'READY':
+          case 'STARTING':
+            titlebar.style.display = 'flex';
+            sebTaskbar.classList.remove('visible');
+            switchView('start');
+            break;
+          case 'LOADING_CONFIGURATION':
+          case 'VALIDATING_CONFIGURATION':
+          case 'STARTING_EXAM':
+            titlebar.style.display = 'flex';
+            sebTaskbar.classList.remove('visible');
+            switchView('loading');
+            break;
+          case 'ERROR':
+            titlebar.style.display = 'flex';
+            sebTaskbar.classList.remove('visible');
+            if (details && details.error) {
+              errorMessageText.textContent = details.error;
+            } else {
+              errorMessageText.textContent = 'The exam configuration could not be loaded.';
+            }
+            switchView('error');
+            break;
+          case 'EXAM_RUNNING':
+          case 'FOCUS_LOST':
+            // In exam running state, hide titlebar and show authentic bottom taskbar
+            titlebar.style.display = 'none';
+            sebTaskbar.classList.add('visible');
+            if (details && details.title) {
+              sebExamLabel.textContent = details.title;
+            }
+            break;
+        }
+      });
+    }
+
+    // Open file picker click
+    btnOpenSeb.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!window.fsebAPI) return;
+      const filePath = await window.fsebAPI.openFilePicker();
+      if (filePath) {
+        window.fsebAPI.startExamFromFile(filePath);
+      }
+    });
+
+    dropZone.addEventListener('click', async () => {
+      btnOpenSeb.click();
+    });
+
+    // Drag and Drop handling
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove('dragover');
+
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        if (file.path && window.fsebAPI) {
+          window.fsebAPI.startExamFromFile(file.path);
+        }
+      }
+    });
+
+    btnTryAgain.addEventListener('click', () => {
+      if (window.fsebAPI) {
+        window.fsebAPI.retryLoading();
+      }
+    });
+
+    btnCloseApp.addEventListener('click', () => {
+      if (window.fsebAPI) {
+        window.fsebAPI.closeApplication();
+      }
+    });
+
+    dockBtnReload.addEventListener('click', () => {
+      if (window.fsebAPI) {
+        window.fsebAPI.reloadExam();
+      }
+    });
+
+    dockBtnQuit.addEventListener('click', () => {
+      if (window.fsebAPI) {
+        window.fsebAPI.closeApplication();
+      }
+    });
+  </script>
+</body>
+</html>

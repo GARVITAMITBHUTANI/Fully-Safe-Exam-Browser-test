@@ -1,0 +1,385 @@
+import * as fs from 'fs';
+import * as zlib from 'zlib';
+import { PlistParser } from './PlistParser';
+import { ExamConfiguration, DEFAULT_EXAM_CONFIGURATION } from './ExamConfiguration';
+import { SebValidator, ValidationResult } from './SebValidator';
+import { Logger } from '../Core/Logger';
+
+export interface SebLoadResult {
+  success: boolean;
+  configuration?: ExamConfiguration;
+  validation?: ValidationResult;
+  error?: string;
+}
+
+export class SebLoader {
+  private static readonly logger = Logger.getInstance();
+
+  /**
+   * Loads configuration from a file path, a seb:// / sebs:// protocol URL, or an http(s):// URL.
+   */
+  public static async loadFromTarget(target: string): Promise<SebLoadResult> {
+    const trimmed = target.trim();
+
+    // 1. Check if it's a seb:// or sebs:// protocol URL
+    if (trimmed.startsWith('seb://') || trimmed.startsWith('sebs://')) {
+      const httpUrl = this.normalizeSebUrl(trimmed);
+      return this.loadFromRemoteUrl(httpUrl);
+    }
+
+    // 2. Check if it's a direct http:// or https:// URL
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return this.loadFromRemoteUrl(trimmed);
+    }
+
+    // 3. Otherwise treat as local filesystem path
+    return this.loadFromFile(trimmed);
+  }
+
+  public static normalizeSebUrl(url: string): string {
+    const clean = url.trim();
+    if (clean.toLowerCase().startsWith('sebs://https://')) {
+      return clean.replace(/^sebs:\/\//i, '');
+    }
+    if (clean.toLowerCase().startsWith('seb://http://')) {
+      return clean.replace(/^seb:\/\//i, '');
+    }
+    if (clean.toLowerCase().startsWith('sebs://')) {
+      return clean.replace(/^sebs:\/\//i, 'https://');
+    }
+    if (clean.toLowerCase().startsWith('seb://')) {
+      return clean.replace(/^seb:\/\//i, 'http://');
+    }
+    return clean;
+  }
+
+  public static async loadFromRemoteUrl(url: string): Promise<SebLoadResult> {
+    this.logger.info('SebLoader', `Fetching exam configuration from remote URL: ${url}`);
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 FSEB/0.1.0',
+          'Accept': 'application/seb, application/xml, text/xml, */*',
+        },
+      });
+
+      if (!response.ok) {
+        return { success: false, error: `Failed to fetch exam configuration: HTTP ${response.status} ${response.statusText}` };
+      }
+
+      const rawBuffer = Buffer.from(await response.arrayBuffer());
+      const parseResult = this.parseContent(rawBuffer, url);
+
+      if (parseResult.success) {
+        return parseResult;
+      }
+
+      // If parsing as .seb failed, check if the response was a direct HTML web page
+      const asString = rawBuffer.toString('utf8');
+      if (asString.includes('<html') || asString.includes('<!DOCTYPE html>')) {
+        const directConfig: ExamConfiguration = {
+          ...DEFAULT_EXAM_CONFIGURATION,
+          startUrl: url,
+          allowedUrls: [`${new URL(url).origin}/*`],
+        };
+        const validation = SebValidator.validate(directConfig);
+        return { success: true, configuration: directConfig, validation };
+      }
+
+      return parseResult;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error('SebLoader', `Error fetching remote configuration: ${msg}`);
+      return { success: false, error: `Failed to fetch remote exam: ${msg}` };
+    }
+  }
+
+  /**
+   * Loads and validates a .seb configuration file from the filesystem.
+   */
+  public static loadFromFile(filePath: string): SebLoadResult {
+    this.logger.info('SebLoader', `Attempting to load configuration from: ${filePath}`);
+
+    if (!fs.existsSync(filePath)) {
+      const err = `Configuration file not found: ${filePath}`;
+      this.logger.error('SebLoader', err);
+      return { success: false, error: err };
+    }
+
+    try {
+      const rawBuffer = fs.readFileSync(filePath);
+      return this.parseContent(rawBuffer, filePath);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error('SebLoader', `Failed to read file: ${message}`);
+      return { success: false, error: `Failed to read configuration file: ${message}` };
+    }
+  }
+
+  /**
+   * Parses raw string or buffer content into an ExamConfiguration.
+   */
+  public static parseContent(buffer: Buffer | string, sourceName = 'memory'): SebLoadResult {
+    let workingBuffer = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer, 'utf8');
+
+    // Automatically decompress GZIP or Deflate payloads
+    if (workingBuffer.length >= 2 && workingBuffer[0] === 0x1f && workingBuffer[1] === 0x8b) {
+      try {
+        workingBuffer = zlib.gunzipSync(workingBuffer);
+        this.logger.info('SebLoader', 'Successfully decompressed GZIP configuration stream.', { source: sourceName });
+      } catch (gzErr) {
+        this.logger.warn('SebLoader', 'Failed to gunzip payload', { error: String(gzErr) });
+      }
+    } else if (
+      workingBuffer.length >= 2 &&
+      workingBuffer[0] === 0x78 &&
+      (workingBuffer[1] === 0x9c || workingBuffer[1] === 0x01 || workingBuffer[1] === 0xda)
+    ) {
+      try {
+        workingBuffer = zlib.inflateSync(workingBuffer);
+        this.logger.info('SebLoader', 'Successfully decompressed Deflate configuration stream.', { source: sourceName });
+      } catch (infErr) {
+        this.logger.warn('SebLoader', 'Failed to inflate payload', { error: String(infErr) });
+      }
+    }
+
+    const contentStr = workingBuffer.toString('utf8');
+
+    // 1. Check for encrypted or binary signatures
+    if (this.isEncryptedOrBinary(workingBuffer, contentStr)) {
+      const errorMsg =
+        'This .seb file uses encryption, certificates, or an unsupported binary format. ' +
+        'FSEB supports unencrypted XML Plist and JSON configurations. ' +
+        'Please export the exam configuration without password encryption.';
+      this.logger.warn('SebLoader', errorMsg, { source: sourceName });
+      return { success: false, error: errorMsg };
+    }
+
+    let parsedDict: Record<string, unknown> | null = null;
+
+    // 2. Try parsing as JSON first
+    const trimmed = contentStr.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        parsedDict = JSON.parse(trimmed) as Record<string, unknown>;
+        this.logger.debug('SebLoader', 'Successfully parsed configuration as JSON.');
+      } catch (jsonErr: unknown) {
+        this.logger.debug('SebLoader', 'JSON parse attempt failed, trying Plist next.', { error: String(jsonErr) });
+      }
+    }
+
+    // 3. Try parsing as XML Plist
+    if (!parsedDict) {
+      try {
+        const plistResult = PlistParser.parse(contentStr);
+        if (typeof plistResult === 'object' && plistResult !== null) {
+          parsedDict = plistResult as Record<string, unknown>;
+          this.logger.debug('SebLoader', 'Successfully parsed configuration as XML Plist.');
+        }
+      } catch (plistErr: unknown) {
+        this.logger.warn('SebLoader', 'Plist parse failed.', { error: String(plistErr) });
+      }
+    }
+
+    // 4. Fallback: Simple XML regex extractor for startURL if parser encountered unknown tags
+    if (!parsedDict) {
+      const extractedUrl = this.extractStartUrlFromXml(contentStr);
+      if (extractedUrl) {
+        parsedDict = { startURL: extractedUrl };
+        this.logger.info('SebLoader', `Extracted startURL via fallback XML parsing: ${extractedUrl}`);
+      }
+    }
+
+    if (!parsedDict) {
+      const errorMsg = 'Malformed or unrecognized configuration format. Expected valid XML Plist or JSON.';
+      this.logger.error('SebLoader', errorMsg, { source: sourceName });
+      return { success: false, error: errorMsg };
+    }
+
+    // 5. Transform parsed dictionary to normalized ExamConfiguration
+    const config = this.mapToExamConfiguration(parsedDict);
+
+    // 6. Validate configuration
+    const validation = SebValidator.validate(config);
+    if (!validation.isValid) {
+      const errorMsg = `Configuration validation failed: ${validation.errors.join('; ')}`;
+      this.logger.error('SebLoader', errorMsg);
+      return { success: false, configuration: config, validation, error: errorMsg };
+    }
+
+    this.logger.info('SebLoader', 'Successfully parsed and validated exam configuration.', {
+      startUrl: config.startUrl,
+      allowedUrlsCount: config.allowedUrls.length,
+      fullscreen: config.fullscreen,
+    });
+
+    return {
+      success: true,
+      configuration: config,
+      validation,
+    };
+  }
+
+  /**
+   * Detects if the content is encrypted SEB data or binary.
+   */
+  private static isEncryptedOrBinary(buffer: Buffer | string, contentStr: string): boolean {
+    // Check for binary headers (e.g. bplist00 or SEB encrypted headers)
+    if (Buffer.isBuffer(buffer)) {
+      if (buffer.length >= 8 && buffer.subarray(0, 8).toString('ascii') === 'bplist00') {
+        // Binary plist - check if it has crypto key or is binary
+        return true;
+      }
+      // Check for high percentage of non-printable bytes
+      let nonPrintable = 0;
+      const sampleSize = Math.min(buffer.length, 512);
+      for (let i = 0; i < sampleSize; i++) {
+        const byte = buffer[i];
+        if ((byte < 32 || byte > 126) && byte !== 9 && byte !== 10 && byte !== 13) {
+          nonPrintable++;
+        }
+      }
+      if (nonPrintable / sampleSize > 0.25) {
+        return true;
+      }
+    }
+
+    // Check for SEB encryption key tags in XML
+    if (
+      contentStr.includes('<key>crypto</key>') ||
+      contentStr.includes('<key>encryptedData</key>') ||
+      contentStr.includes('<key>sebKeyHash</key>') && !contentStr.includes('<key>startURL</key>')
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Fallback regex to find <key>startURL</key><string>...</string> in non-standard XML
+   */
+  private static extractStartUrlFromXml(xml: string): string | null {
+    const match = /<key>\s*startURL\s*<\/key>\s*<string>([^<]+)<\/string>/i.exec(xml);
+    return match ? match[1].trim() : null;
+  }
+
+  /**
+   * Maps SEB plist dictionary or JSON dictionary to normalized ExamConfiguration
+   */
+  private static mapToExamConfiguration(dict: Record<string, unknown>): ExamConfiguration {
+    const rawStartUrl =
+      (dict['startURL'] as string) ||
+      (dict['startUrl'] as string) ||
+      (dict['url'] as string) ||
+      '';
+
+    const startUrl = typeof rawStartUrl === 'string' ? rawStartUrl.trim() : '';
+
+    // Extract allowed URLs or filter rules
+    const allowedUrls: string[] = [];
+
+    // If explicit allowedUrls array is present
+    if (Array.isArray(dict['allowedUrls'])) {
+      for (const item of dict['allowedUrls']) {
+        if (typeof item === 'string' && item.trim()) {
+          allowedUrls.push(item.trim());
+        }
+      }
+    }
+
+    // Safe Exam Browser urlFilterRules format
+    if (Array.isArray(dict['urlFilterRules'])) {
+      for (const rule of dict['urlFilterRules']) {
+        if (typeof rule === 'object' && rule !== null) {
+          const ruleObj = rule as Record<string, unknown>;
+          if (ruleObj['active'] !== false && typeof ruleObj['expression'] === 'string') {
+            allowedUrls.push(ruleObj['expression'].trim());
+          }
+        }
+      }
+    }
+
+    // Always ensure the startUrl origin is in allowedUrls if not already present
+    if (startUrl) {
+      try {
+        const parsed = new URL(startUrl);
+        const originWildcard = `${parsed.protocol}//${parsed.host}/*`;
+        if (!allowedUrls.includes(originWildcard) && !allowedUrls.includes(startUrl)) {
+          allowedUrls.push(originWildcard);
+        }
+      } catch {
+        // Ignored
+      }
+    }
+
+    // Navigation configuration
+    const allowReload = dict['browserWindowAllowReload'] !== undefined
+      ? Boolean(dict['browserWindowAllowReload'])
+      : true;
+
+    // Fullscreen configuration
+    const fullscreen = dict['fullscreen'] !== undefined
+      ? Boolean(dict['fullscreen'])
+      : true;
+
+    // Downloads configuration
+    const downloads = dict['allowDownUploads'] !== undefined
+      ? Boolean(dict['allowDownUploads'])
+      : false;
+
+    // Developer tools
+    const developerTools = Boolean(dict['allowDevTools'] || dict['developerTools']);
+
+    // Title / Institution
+    const examTitle = (dict['examTitle'] as string) || (dict['title'] as string) || undefined;
+    const institution = (dict['institution'] as string) || undefined;
+
+    // Taskbar configuration
+    const showTaskBar = dict['showTaskBar'] !== undefined ? Boolean(dict['showTaskBar']) : true;
+    const taskBarHeight = typeof dict['taskBarHeight'] === 'number' ? dict['taskBarHeight'] : 40;
+    const showQuitButton = dict['showQuitButton'] !== undefined ? Boolean(dict['showQuitButton']) : true;
+    const showReloadButton = dict['showReloadButton'] !== undefined ? Boolean(dict['showReloadButton']) : true;
+    const showTime = dict['showTime'] !== undefined ? Boolean(dict['showTime']) : true;
+    const allowWlan = dict['allowWlan'] !== undefined ? Boolean(dict['allowWlan']) : true;
+    const audioControlEnabled = dict['audioControlEnabled'] !== undefined ? Boolean(dict['audioControlEnabled']) : true;
+    const quitUrl = (dict['quitURL'] as string) || (dict['quitUrl'] as string) || '/quit-seb';
+
+    return {
+      ...DEFAULT_EXAM_CONFIGURATION,
+      startUrl,
+      allowedUrls,
+      fullscreen,
+      developerTools,
+      downloads,
+      navigation: {
+        ...DEFAULT_EXAM_CONFIGURATION.navigation,
+        allowReload,
+      },
+      clipboard: {
+        // FSEB deliberately permits copy, paste, selectAll by default
+        copy: dict['allowCopy'] !== undefined ? Boolean(dict['allowCopy']) : true,
+        paste: dict['allowPaste'] !== undefined ? Boolean(dict['allowPaste']) : true,
+        selectAll: dict['allowSelectAll'] !== undefined ? Boolean(dict['allowSelectAll']) : true,
+      },
+      taskbar: {
+        showTaskBar,
+        taskBarHeight,
+        showQuitButton,
+        showReloadButton,
+        showTime,
+        allowWlan,
+        audioControlEnabled,
+        quitUrl,
+      },
+      compatibility: {
+        sebVersion: '3.10.2',
+        platform: 'SEB_Windows_3.10.2',
+      },
+      windowSwitching: dict['windowSwitching'] !== undefined ? Boolean(dict['windowSwitching']) : true,
+      examTitle,
+      institution,
+      rawSettings: dict,
+    };
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "name": "fseb",
+  "productName": "FSEB",
+  "version": "0.1.0",
+  "description": "FSEB — Fully Safe Exam Browser",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc && node scripts/copy-assets.js",
+    "watch": "tsc -w",
+    "start": "npm run build && electron .",
+    "test": "tsx tests/run-all.ts",
+    "register-seb": "node scripts/register-registry.js",
+    "unregister-seb": "node scripts/unregister-registry.js",
+    "pack": "tsc && electron-builder --dir",
+    "dist": "tsc && electron-builder"
+  },
+  "keywords": [
+    "exam-browser",
+    "seb",
+    "safe-exam-browser",
+    "education",
+    "assessment"
+  ],
+  "author": "FSEB Contributors",
+  "license": "Apache-2.0",
+  "build": {
+    "appId": "org.fseb.browser",
+    "productName": "FSEB",
+    "directories": {
+      "output": "release"
+    },
+    "protocols": [
+      {
+        "name": "Safe Exam Browser Protocol",
+        "schemes": [
+          "seb",
+          "sebs"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "fileAssociations": [
+        {
+          "ext": "seb",
+          "name": "Safe Exam Browser Configuration",
+          "description": "FSEB Exam Configuration File",
+          "role": "Viewer"
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "include": "installer/installer.nsh"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ]
+  },
+  "dependencies": {
+    "plist": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/plist": "^3.0.5",
+    "electron": "^24.21.0",
+    "electron-builder": "^24.13.3",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  }
+}

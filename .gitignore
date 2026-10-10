@@ -1,0 +1,13 @@
+node_modules/
+dist/
+release/
+build/
+.env
+*.log
+logs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.seb
+!samples/*.seb

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>crypto</key>
+    <dict>
+        <key>cipher</key>
+        <string>AES-256-CBC</string>
+        <key>encryptedData</key>
+        <data>
+        4aHR0cHM6Ly9leGFtcGxlLmNvbS9leGFtL3NlY3VyZQ==
+        </data>
+    </dict>
+</dict>
+</plist>
+
