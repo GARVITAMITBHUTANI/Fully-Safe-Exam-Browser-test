@@ -6,34 +6,33 @@
   user-select: none;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  height: 100vh;
+html, body {
   width: 100vw;
+  height: 100vh;
   overflow: hidden;
-  position: relative;
-  background-color: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #ebebeb;
 }
 
 /* Background Phases */
-body.phase-desktop {
-  background-color: transparent !important;
-}
 body.phase-grey {
   background-color: #d1d5db !important;
 }
+
 body.phase-black {
   background-color: #000000 !important;
 }
+
 body.phase-unconfigured {
   background-color: #ebebeb !important;
 }
+
 body.phase-exam {
   background-color: #000000 !important;
 }
 
 /* ==========================================================================
-   1. AUTHENTIC MULTI-PHASE SPLASH SCREEN (Images 1, 2, 3, 4)
+   1. AUTHENTIC MULTI-PHASE SPLASH SCREEN (Images 2, 3, 4)
    ========================================================================== */
 .seb-splash-container {
   display: none;
@@ -45,6 +44,10 @@ body.phase-exam {
   justify-content: center;
   align-items: center;
   z-index: 99999;
+}
+
+.seb-splash-container.active {
+  display: flex !important;
 }
 
 .seb-splash-card {
@@ -62,20 +65,20 @@ body.phase-exam {
 .seb-splash-body {
   display: flex;
   flex: 1;
-  padding: 28px 24px;
+  padding: 26px 22px;
   align-items: center;
 }
 
 .seb-splash-logo {
-  flex: 0 0 155px;
+  flex: 0 0 145px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .seb-logo-svg {
-  width: 135px;
-  height: 135px;
+  width: 130px;
+  height: 130px;
 }
 
 .seb-splash-info {
@@ -87,7 +90,7 @@ body.phase-exam {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .seb-bold-orange {
@@ -135,8 +138,8 @@ body.phase-exam {
 .seb-green-bar {
   height: 100%;
   background: #22c55e;
-  width: 0%;
-  transition: width 0.35s ease-in-out;
+  width: 35%;
+  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Wide Rotating/Sliding Blue Bar (Phase 2 & 3 - Validating remote session policy) */
@@ -145,11 +148,16 @@ body.phase-exam {
   position: absolute;
   top: 52%;
   left: 0;
-  width: 100%;
+  width: 100vw;
   height: 28px;
-  background: #e5e7eb;
+  background: #d4d4d8;
   z-index: 10;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.seb-wide-bar-container.active {
+  display: block !important;
 }
 
 .seb-wide-bar {
@@ -170,6 +178,7 @@ body.phase-exam {
   color: #111827;
   z-index: 12;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 @keyframes slide-blue-bar {
@@ -182,37 +191,60 @@ body.phase-exam {
    2. AUTHENTIC UNCONFIGURED SEB DEFAULT PAGE (Image 6)
    ========================================================================== */
 .view-unconfigured {
-  display: block;
+  display: none;
   background-color: #ebebeb;
-  height: calc(100vh - 40px);
+  height: calc(100vh - 36px);
   width: 100vw;
   overflow-y: auto;
   color: #222222;
 }
 
+.view-unconfigured.active {
+  display: block !important;
+}
+
+/* Minimal Top Title Bar Strip (Image 6) */
+.seb-top-strip {
+  height: 26px;
+  background-color: #f1f1f1;
+  border-bottom: 1px solid #d4d4d4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-size: 12px;
+  color: #444444;
+}
+
+.seb-top-strip-title {
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+/* White Navigation Header */
 .seb-nav-header {
-  height: 54px;
+  height: 52px;
   background-color: #ffffff;
   border-bottom: 1px solid #dcdcdc;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 40px;
+  padding: 0 32px;
 }
 
 .seb-brand-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .seb-header-logo {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
 }
 
 .seb-header-title {
-  font-size: 19px;
+  font-size: 18.5px;
   font-weight: 600;
   color: #333333;
 }
@@ -220,12 +252,12 @@ body.phase-exam {
 .seb-menu-right {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
 }
 
 .seb-nav-link {
   text-decoration: none;
-  font-size: 13.5px;
+  font-size: 13px;
   color: #444444;
   font-weight: 500;
   display: flex;
@@ -238,10 +270,11 @@ body.phase-exam {
 }
 
 .caret {
-  font-size: 10px;
+  font-size: 9px;
   color: #777777;
 }
 
+/* Main Content Container */
 .seb-main-content {
   max-width: 980px;
   margin: 0 auto;
@@ -275,7 +308,7 @@ body.phase-exam {
   font-size: 23px;
   font-weight: 600;
   color: #333333;
-  margin-top: 12px;
+  margin-top: 10px;
   margin-bottom: 12px;
 }
 
@@ -283,15 +316,15 @@ body.phase-exam {
   color: #c00000;
   font-size: 14.5px;
   font-weight: 600;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .seb-section-examinee {
-  margin-bottom: 28px;
+  margin-bottom: 26px;
 }
 
 .seb-examinee-heading {
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 700;
   color: #222222;
   margin-bottom: 8px;
@@ -307,17 +340,17 @@ body.phase-exam {
 .seb-mini-icon {
   display: inline-block;
   vertical-align: middle;
-  padding: 0 4px;
+  padding: 0 3px;
   cursor: pointer;
 }
 
 .seb-mini-icon:hover svg {
-  transform: scale(1.1);
+  transform: scale(1.15);
   transition: transform 0.15s ease;
 }
 
 .seb-bullet-list {
-  padding-left: 24px;
+  padding-left: 22px;
   margin-bottom: 24px;
 }
 
@@ -329,15 +362,15 @@ body.phase-exam {
 }
 
 .seb-section-more {
-  margin-top: 32px;
-  margin-bottom: 40px;
+  margin-top: 30px;
+  margin-bottom: 38px;
 }
 
 .seb-more-heading {
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 700;
   color: #222222;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .seb-links-list {
@@ -360,7 +393,7 @@ body.phase-exam {
 }
 
 .seb-content-footer {
-  margin-top: 50px;
+  margin-top: 48px;
   font-size: 12px;
   color: #666666;
 }
@@ -374,17 +407,21 @@ body.phase-exam {
   top: 0;
   left: 0;
   width: 100vw;
-  height: calc(100vh - 40px);
+  height: calc(100vh - 36px);
   justify-content: center;
   align-items: center;
   background: rgba(0, 0, 0, 0.4);
   z-index: 1000;
 }
 
+.view-error.active {
+  display: flex !important;
+}
+
 .error-dialog-box {
   width: 440px;
   background: #ffffff;
-  padding: 30px;
+  padding: 28px;
   border-radius: 4px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   text-align: center;
@@ -413,7 +450,7 @@ body.phase-exam {
   font-size: 13.5px;
   color: #4b5563;
   line-height: 1.5;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .error-dialog-btns {
@@ -438,7 +475,7 @@ body.phase-exam {
 }
 
 /* ==========================================================================
-   4. AUTHENTIC SAFE EXAM BROWSER BOTTOM TASKBAR (Images 5 & 6)
+   4. AUTHENTIC SAFE EXAM BROWSER BOTTOM TASKBAR (Matching Image 5 & 6)
    ========================================================================== */
 .seb-taskbar {
   display: none;
@@ -446,41 +483,36 @@ body.phase-exam {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 40px;
-  background: #333333;
-  border-top: 1px solid #444444;
+  height: 36px;
+  background: #e0e0e0;
+  border-top: 1px solid #c8c8c8;
   z-index: 99999;
   align-items: center;
   justify-content: space-between;
-  padding: 0 10px;
+  padding: 0 8px;
   user-select: none;
 }
 
 .seb-taskbar.visible {
-  display: flex;
+  display: flex !important;
 }
 
 .seb-taskbar-left, .seb-taskbar-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.seb-taskbar-item {
+.seb-taskbar-seb-logo {
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  padding: 2px 4px;
   border-radius: 2px;
 }
 
-.seb-item-inactive {
-  background: #444444;
-}
-
-.seb-taskbar-label {
-  font-size: 12px;
-  color: #e5e7eb;
+.seb-taskbar-seb-logo:hover {
+  background: #d0d0d0;
 }
 
 .seb-taskbar-icon {
@@ -489,30 +521,31 @@ body.phase-exam {
 }
 
 .seb-taskbar-lang {
-  font-size: 12px;
-  color: #d1d5db;
-  font-weight: 500;
+  font-size: 11.5px;
+  color: #222222;
+  font-weight: 600;
   padding: 0 4px;
+  letter-spacing: 0.5px;
 }
 
 .seb-taskbar-clock {
   font-size: 12px;
   font-weight: 600;
-  color: #f3f4f6;
+  color: #111111;
   font-variant-numeric: tabular-nums;
-  padding: 0 6px;
+  padding: 0 4px;
 }
 
 .seb-quit-power-btn {
   background: transparent;
   border: none;
-  color: #e5e7eb;
+  color: #333333;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 4px 6px;
-  border-radius: 3px;
+  border-radius: 2px;
   transition: all 0.15s ease;
 }
 

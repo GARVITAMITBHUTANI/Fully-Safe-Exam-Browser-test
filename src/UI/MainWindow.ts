@@ -9,9 +9,11 @@ import { Logger } from '../Core/Logger';
 export class MainWindow {
   private static readonly logger = Logger.getInstance();
   private window: BrowserWindow | null = null;
+  private splashWindow: BrowserWindow | null = null;
   private browserHost: BrowserHost | null = null;
   private readonly session: ExamSession;
   private currentSebPath: string | null = null;
+  private pendingTarget: string | null = null;
 
   constructor(session: ExamSession) {
     this.session = session;
@@ -23,20 +25,49 @@ export class MainWindow {
     return this.window;
   }
 
+  public setInitialTarget(target: string): void {
+    this.pendingTarget = target;
+  }
+
   /**
-   * Creates and initializes the primary desktop window
+   * Creates and initializes the primary desktop window and authentic startup splash
    */
   public createWindow(): BrowserWindow {
-    MainWindow.logger.info('MainWindow', 'Creating main window...');
+    MainWindow.logger.info('MainWindow', 'Creating splash and main windows...');
 
+    // Stage 1 (Image 1): Native centered floating splash card over the desktop
+    this.splashWindow = new BrowserWindow({
+      width: 490,
+      height: 255,
+      frame: false,
+      resizable: false,
+      center: true,
+      alwaysOnTop: true,
+      show: false,
+      backgroundColor: '#ffffff',
+      hasShadow: true,
+      skipTaskbar: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+      },
+    });
+
+    const splashPath = path.join(__dirname, 'views/splash.html');
+    this.splashWindow.loadFile(splashPath);
+
+    this.splashWindow.once('ready-to-show', () => {
+      this.splashWindow?.show();
+    });
+
+    // Main window for Stages 2, 3, 4, 5, 6
     this.window = new BrowserWindow({
       width: 1024,
       height: 768,
       minWidth: 800,
       minHeight: 600,
       center: true,
-      backgroundColor: '#00000000',
-      transparent: true,
+      backgroundColor: '#d1d5db',
       show: false,
       autoHideMenuBar: true,
       frame: false,
@@ -54,7 +85,7 @@ export class MainWindow {
       policy: this.session.getPolicy(),
       onPageTitleUpdated: (title) => {
         if (this.window && !this.window.isDestroyed()) {
-          this.window.setTitle(`${title} — FSEB`);
+          this.window.setTitle(`${title} — Safe Exam Browser`);
         }
       },
       onLoadError: (errorDesc) => {
@@ -65,7 +96,7 @@ export class MainWindow {
       },
     });
 
-    // Window focus and blur handling (window switching support)
+    // Window focus and blur handling
     this.window.on('focus', () => {
       this.session.handleFocusChange(true);
     });
@@ -80,13 +111,46 @@ export class MainWindow {
       }
     });
 
-    // Load initial UI shell (Start screen)
+    // Load initial UI shell
     const viewPath = path.join(__dirname, 'views/index.html');
     this.window.loadFile(viewPath);
 
-    this.window.once('ready-to-show', () => {
-      if (this.window) {
-        this.window.show();
+    // Multi-stage startup sequence coordinator
+    this.window.once('ready-to-show', async () => {
+      // Stage 1 duration: Allow floating splash card on user desktop to display
+      await new Promise((resolve) => setTimeout(resolve, 1400));
+
+      if (!this.window || this.window.isDestroyed()) return;
+
+      // Stage 2 & 3 (Images 2 & 3): Fullscreen light grey background with sliding blue bar
+      this.window.setFullScreen(true);
+      this.window.show();
+      this.window.webContents.send('fseb:state-update', { state: 'SPLASH_GREY' });
+
+      // Close floating splash window
+      if (this.splashWindow && !this.splashWindow.isDestroyed()) {
+        this.splashWindow.close();
+        this.splashWindow = null;
+      }
+
+      const targetToLoad = this.pendingTarget;
+      this.pendingTarget = null;
+
+      if (targetToLoad) {
+        // Load the specified exam configuration
+        await this.loadExamFromTarget(targetToLoad);
+      } else {
+        // Continue unconfigured startup splash sequence
+        await new Promise((resolve) => setTimeout(resolve, 2200));
+        if (!this.window || this.window.isDestroyed()) return;
+
+        // Stage 4 (Image 4): Solid pitch black background with green bar at 100%
+        this.window.webContents.send('fseb:state-update', { state: 'SPLASH_BLACK' });
+
+        await new Promise((resolve) => setTimeout(resolve, 1600));
+        if (!this.window || this.window.isDestroyed()) return;
+
+        // Stage 5 & 6 (Images 5 & 6): Transition to authentic unconfigured screen with bottom taskbar
         this.session.transitionTo(SessionState.READY);
       }
     });
@@ -95,6 +159,10 @@ export class MainWindow {
       this.browserHost?.destroy();
       this.browserHost = null;
       this.window = null;
+      if (this.splashWindow && !this.splashWindow.isDestroyed()) {
+        this.splashWindow.close();
+        this.splashWindow = null;
+      }
     });
 
     return this.window;
@@ -106,6 +174,19 @@ export class MainWindow {
   public async loadExamFromTarget(target: string): Promise<boolean> {
     this.currentSebPath = target;
     MainWindow.logger.info('MainWindow', `Initiating exam load from target: ${target}`);
+
+    if (this.splashWindow && !this.splashWindow.isDestroyed()) {
+      this.splashWindow.close();
+      this.splashWindow = null;
+    }
+
+    if (this.window && !this.window.isDestroyed()) {
+      if (!this.window.isVisible()) {
+        this.window.setFullScreen(true);
+        this.window.show();
+      }
+      this.window.webContents.send('fseb:state-update', { state: 'SPLASH_GREY' });
+    }
 
     this.session.transitionTo(SessionState.LOADING_CONFIGURATION, { target });
 
@@ -126,15 +207,22 @@ export class MainWindow {
       this.browserHost.updatePolicy(this.session.getPolicy());
     }
 
-    // Apply window policy (e.g., fullscreen)
     if (this.window) {
       this.session.getPolicy().window.applyPolicyToWindow(this.window);
     }
 
+    // Wait for the blue validating bar animation
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    if (this.window && !this.window.isDestroyed()) {
+      // Stage 4: Solid pitch black background with green bar at 100%
+      this.window.webContents.send('fseb:state-update', { state: 'SPLASH_BLACK' });
+    }
+
     this.session.transitionTo(SessionState.STARTING_EXAM, { startUrl: config.startUrl });
 
-    // Allow splash sequence (Desktop -> Rotating blue -> Grey -> Black completed) to animate naturally
-    await new Promise((resolve) => setTimeout(resolve, 5200));
+    // Allow Stage 4 black screen with 100% green bar to display
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     try {
       if (!this.browserHost) {
@@ -251,4 +339,3 @@ export class MainWindow {
     });
   }
 }
-

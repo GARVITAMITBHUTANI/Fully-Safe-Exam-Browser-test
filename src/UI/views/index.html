@@ -6,22 +6,24 @@
   <title>Safe Exam Browser</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="phase-desktop">
+<body class="phase-grey">
 
-  <!-- 1. AUTHENTIC SEB MULTI-PHASE SPLASH SCREEN -->
-  <div id="seb-splash-container" class="seb-splash-container">
+  <!-- 1. AUTHENTIC SEB MULTI-PHASE SPLASH SCREEN (Images 2, 3, 4) -->
+  <div id="seb-splash-container" class="seb-splash-container active">
     <div class="seb-splash-card">
       <div class="seb-splash-body">
         <div class="seb-splash-logo">
-          <!-- Authentic Globe + Lock/Keyhole Logo -->
+          <!-- Authentic Globe + Lock Logo -->
           <svg viewBox="0 0 100 100" class="seb-logo-svg">
             <circle cx="50" cy="50" r="46" fill="#1d70b8" />
             <path d="M22 42 Q32 26 50 35 Q65 44 76 34 Q86 52 68 70 Q46 86 28 68 Z" fill="#e36c09" />
             <path d="M54 18 Q68 14 80 24 Q74 34 58 28 Z" fill="#e36c09" />
-            <!-- Lock / Key symbol -->
-            <path d="M34 28 L48 28 L48 46 L34 46 Z" fill="#333333" stroke="#1f2937" stroke-width="2" />
-            <circle cx="41" cy="36" r="3" fill="#ffffff" />
-            <path d="M41 42 L41 68 L50 68 L50 56 L41 56" fill="#333333" stroke="#1f2937" stroke-width="2" />
+            <!-- Tilted Key Handle & Shaft -->
+            <g transform="translate(42, 46) rotate(-22)">
+              <rect x="-24" y="-12" width="22" height="22" rx="3" fill="none" stroke="#2b2b2b" stroke-width="5" />
+              <rect x="-2" y="-5" width="26" height="10" rx="2" fill="#2b2b2b" />
+              <rect x="18" y="-1" width="8" height="6" fill="#2b2b2b" />
+            </g>
           </svg>
         </div>
         <div class="seb-splash-info">
@@ -45,7 +47,7 @@
     </div>
 
     <!-- Wide Rotating/Sliding Blue Bar for Validating Remote Session Policy -->
-    <div id="seb-wide-bar-container" class="seb-wide-bar-container">
+    <div id="seb-wide-bar-container" class="seb-wide-bar-container active">
       <div id="seb-wide-bar" class="seb-wide-bar"></div>
       <div class="seb-wide-bar-text">Validating remote session policy</div>
     </div>
@@ -53,6 +55,12 @@
 
   <!-- 2. AUTHENTIC UNCONFIGURED SEB DEFAULT PAGE (Image 6) -->
   <div id="view-unconfigured" class="view-unconfigured">
+    <!-- Sleek Top Strip matching SEB 3.x Window -->
+    <div class="seb-top-strip">
+      <span class="seb-top-strip-title">Safe Exam Browser</span>
+      <span style="font-size: 11px; color: #888888;">&#9679;</span>
+    </div>
+
     <!-- Top Navigation Bar -->
     <header class="seb-nav-header">
       <div class="seb-brand-left">
@@ -60,9 +68,10 @@
           <circle cx="50" cy="50" r="46" fill="#1d70b8" />
           <path d="M22 42 Q32 26 50 35 Q65 44 76 34 Q86 52 68 70 Q46 86 28 68 Z" fill="#e36c09" />
           <path d="M54 18 Q68 14 80 24 Q74 34 58 28 Z" fill="#e36c09" />
-          <path d="M34 28 L48 28 L48 46 L34 46 Z" fill="#333333" />
-          <circle cx="41" cy="36" r="3" fill="#ffffff" />
-          <path d="M41 42 L41 68 L50 68 L50 56 L41 56" fill="#333333" />
+          <g transform="translate(42, 46) rotate(-22)">
+            <rect x="-24" y="-12" width="22" height="22" rx="3" fill="none" stroke="#2b2b2b" stroke-width="5" />
+            <rect x="-2" y="-5" width="26" height="10" rx="2" fill="#2b2b2b" />
+          </g>
         </svg>
         <span class="seb-header-title">Safe Exam Browser</span>
       </div>
@@ -96,11 +105,11 @@
         <h2 class="seb-examinee-heading">If you are an examinee:</h2>
         <p class="seb-desc-text">
           You should have received a SEB configuration file, with the file extension .seb and this icon: 
-          <span class="seb-mini-icon" id="btn-open-file-icon" title="Click or drop .seb file here">
+          <span class="seb-mini-icon" id="btn-open-file-icon" title="Click or drop .seb file here to begin exam">
             <svg viewBox="0 0 100 100" width="22" height="22" style="vertical-align: middle; cursor: pointer;">
               <circle cx="50" cy="50" r="45" fill="#1d70b8" />
               <path d="M22 42 Q32 26 50 35 Q65 44 76 34 Q86 52 68 70 Q46 86 28 68 Z" fill="#e36c09" />
-              <path d="M34 28 L48 28 L48 46 L34 46 Z" fill="#333333" />
+              <circle cx="45" cy="45" r="10" fill="#333333" />
             </svg>
           </span> 
           or you may have received a link to configure SEB or to start an exam with SEB.
@@ -145,19 +154,21 @@
     </div>
   </div>
 
-  <!-- 4. AUTHENTIC SAFE EXAM BROWSER BOTTOM TASKBAR (Image 5 & 6) -->
+  <!-- 4. AUTHENTIC SAFE EXAM BROWSER BOTTOM TASKBAR (Images 5 & 6) -->
   <div class="seb-taskbar" id="seb-taskbar">
     <div class="seb-taskbar-left">
-      <div class="seb-taskbar-item seb-item-inactive" title="Browser Window">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-          <circle cx="12" cy="12" r="10" fill="#9ca3af" />
+      <div class="seb-taskbar-seb-logo" id="seb-taskbar-icon-btn" title="Safe Exam Browser">
+        <svg viewBox="0 0 100 100" width="20" height="20">
+          <circle cx="50" cy="50" r="46" fill="#1d70b8" />
+          <path d="M22 42 Q32 26 50 35 Q65 44 76 34 Q86 52 68 70 Q46 86 28 68 Z" fill="#e36c09" />
+          <path d="M54 18 Q68 14 80 24 Q74 34 58 28 Z" fill="#e36c09" />
+          <circle cx="45" cy="45" r="9" fill="#2b2b2b" />
         </svg>
-        <span class="seb-taskbar-label">Browser</span>
       </div>
     </div>
 
     <div class="seb-taskbar-right">
-      <div class="seb-taskbar-icon" title="Wireless Network Connected">
+      <div class="seb-taskbar-icon" title="Network Connected">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#22c55e" stroke-width="2.5">
           <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
           <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
@@ -173,7 +184,7 @@
       <div class="seb-taskbar-clock" id="seb-clock">06:13</div>
 
       <button class="seb-quit-power-btn" id="dock-btn-quit" title="Quit Safe Exam Browser">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2">
           <path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>
           <line x1="12" y1="2" x2="12" y2="12"/>
         </svg>
@@ -209,92 +220,59 @@
       document.body.classList.add('phase-' + phase);
     }
 
-    let isSplashAnimating = false;
-
-    // Multi-phase splash animation matching images 1 through 5
-    function runSplashSequence(onFinish) {
-      if (isSplashAnimating) return;
-      isSplashAnimating = true;
-
-      splashContainer.style.display = 'flex';
-      viewUnconfigured.style.display = 'none';
-      viewError.style.display = 'none';
-      sebTaskbar.classList.remove('visible');
-
-      // Phase 1 (Image 1): Splash on desktop background with beginning green bar
-      setPhase('desktop');
-      greenBar.style.width = '25%';
-      wideBarContainer.style.display = 'none';
-
-      // Phase 2 (Image 2): Rotating/sliding blue bar begins over splash
-      setTimeout(() => {
-        setPhase('desktop');
-        wideBarContainer.style.display = 'block';
-        greenBar.style.width = '45%';
-      }, 1000);
-
-      // Phase 3 (Image 3): Background becomes solid grey, blue bar continues with validation text
-      setTimeout(() => {
-        setPhase('grey');
-        greenBar.style.width = '75%';
-      }, 2400);
-
-      // Phase 4 (Image 4): Screen turns completely solid black, splash green bar completes to 100%
-      setTimeout(() => {
-        setPhase('black');
-        wideBarContainer.style.display = 'none';
-        greenBar.style.width = '100%';
-      }, 4000);
-
-      // Phase 5 (Image 5 & 6): Splash closes, reveals examination / browser taskbar
-      setTimeout(() => {
-        splashContainer.style.display = 'none';
-        isSplashAnimating = false;
-        sebTaskbar.classList.add('visible');
-        if (onFinish) {
-          onFinish();
-        }
-      }, 5500);
-    }
-
     if (window.fsebAPI) {
       window.fsebAPI.onStateUpdate((state, details) => {
         switch (state) {
-          case 'READY':
-            // Show authentic unconfigured screen (Image 6) with bottom taskbar
-            splashContainer.style.display = 'none';
-            viewError.style.display = 'none';
-            viewUnconfigured.style.display = 'block';
-            sebTaskbar.classList.add('visible');
-            setPhase('unconfigured');
-            break;
-
+          case 'SPLASH_GREY':
           case 'LOADING_CONFIGURATION':
           case 'VALIDATING_CONFIGURATION':
-          case 'STARTING_EXAM':
-            runSplashSequence(() => {
-              setPhase('exam');
-            });
+            setPhase('grey');
+            splashContainer.classList.add('active');
+            wideBarContainer.classList.add('active');
+            greenBar.style.width = '65%';
+            viewUnconfigured.classList.remove('active');
+            viewError.classList.remove('active');
+            sebTaskbar.classList.remove('visible');
             break;
 
-          case 'ERROR':
-            splashContainer.style.display = 'none';
-            viewUnconfigured.style.display = 'none';
-            viewError.style.display = 'flex';
-            sebTaskbar.classList.add('visible');
+          case 'SPLASH_BLACK':
+          case 'STARTING_EXAM':
+            setPhase('black');
+            splashContainer.classList.add('active');
+            wideBarContainer.classList.remove('active');
+            greenBar.style.width = '100%';
+            viewUnconfigured.classList.remove('active');
+            viewError.classList.remove('active');
+            sebTaskbar.classList.remove('visible');
+            break;
+
+          case 'READY':
             setPhase('unconfigured');
-            if (details && details.error) {
-              errorMessageText.textContent = details.error;
-            }
+            splashContainer.classList.remove('active');
+            wideBarContainer.classList.remove('active');
+            viewUnconfigured.classList.add('active');
+            viewError.classList.remove('active');
+            sebTaskbar.classList.add('visible');
             break;
 
           case 'EXAM_RUNNING':
-            if (!isSplashAnimating) {
-              splashContainer.style.display = 'none';
-              viewUnconfigured.style.display = 'none';
-              viewError.style.display = 'none';
-              sebTaskbar.classList.add('visible');
-              setPhase('exam');
+            setPhase('exam');
+            splashContainer.classList.remove('active');
+            wideBarContainer.classList.remove('active');
+            viewUnconfigured.classList.remove('active');
+            viewError.classList.remove('active');
+            sebTaskbar.classList.add('visible');
+            break;
+
+          case 'ERROR':
+            setPhase('unconfigured');
+            splashContainer.classList.remove('active');
+            wideBarContainer.classList.remove('active');
+            viewUnconfigured.classList.remove('active');
+            viewError.classList.add('active');
+            sebTaskbar.classList.add('visible');
+            if (details && details.error) {
+              errorMessageText.textContent = details.error;
             }
             break;
         }

@@ -52,19 +52,15 @@ if (!gotTheLock) {
     WindowsIntegration.registerProtocolClients();
     WindowsIntegration.registerWindowsUserRegistry();
 
-    // Create the main window
-    const window = mainWindow.createWindow();
-
     // Check if a target (.seb file or seb:// URL) was provided in startup arguments
     const startupTarget = WindowsIntegration.extractLaunchTarget(process.argv);
     if (startupTarget) {
       logger.info('Main', `Startup argument detected target: ${startupTarget}`);
-      window.once('ready-to-show', async () => {
-        if (mainWindow) {
-          await mainWindow.loadExamFromTarget(startupTarget);
-        }
-      });
+      mainWindow.setInitialTarget(startupTarget);
     }
+
+    // Create the main window
+    const window = mainWindow.createWindow();
 
     app.on('activate', () => {
       if (mainWindow && !mainWindow.getWindow()) {
