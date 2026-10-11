@@ -35,9 +35,11 @@ export class MainWindow {
       minWidth: 800,
       minHeight: 600,
       center: true,
-      backgroundColor: '#0f172a',
+      backgroundColor: '#00000000',
+      transparent: true,
       show: false,
       autoHideMenuBar: true,
+      frame: false,
       webPreferences: {
         preload: path.join(__dirname, '../Preload/preload.js'),
         nodeIntegration: false,

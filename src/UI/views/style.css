@@ -371,3 +371,168 @@ body {
   background: #b91c1c !important;
 }
 
+
+/* Authentic SEB Splash Phases */
+body.phase-desktop {
+  background-color: transparent !important;
+}
+body.phase-grey {
+  background-color: #d4d4d8 !important;
+}
+body.phase-black {
+  background-color: #000000 !important;
+}
+body.phase-start {
+  background-color: #0f172a !important; /* Original dark */
+}
+body.phase-exam {
+  background-color: #000000 !important; /* Behind the browser view */
+}
+
+/* Splash Container */
+.seb-splash-container {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Splash Card */
+.seb-splash-card {
+  width: 480px;
+  height: 250px;
+  background: #ffffff;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.seb-splash-body {
+  display: flex;
+  flex: 1;
+  padding: 30px;
+  align-items: center;
+}
+
+.seb-splash-logo {
+  flex: 0 0 160px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.seb-logo-svg {
+  width: 130px;
+  height: 130px;
+}
+
+.seb-splash-info {
+  flex: 1;
+  padding-left: 20px;
+}
+
+.seb-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.seb-bold-orange {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ea580c;
+  font-family: Arial, sans-serif;
+  letter-spacing: -0.5px;
+}
+
+.seb-sub-text {
+  font-size: 13px;
+  color: #52525b;
+  line-height: 1.1;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.seb-meta-text {
+  font-size: 13px;
+  color: #3f3f46;
+  line-height: 1.4;
+}
+.seb-meta-dim {
+  color: #71717a;
+}
+
+/* Splash Bottom Green Bar */
+.seb-splash-progress {
+  width: 100%;
+  height: 16px;
+  background: #f4f4f5;
+  border-top: 1px solid #e4e4e7;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+.seb-green-bar {
+  height: 100%;
+  background: #22c55e;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+/* Wide Blue Indeterminate Bar (Phase 2/3) */
+.seb-wide-bar-container {
+  display: none;
+  position: absolute;
+  top: 55%;
+  left: 0;
+  width: 100%;
+  height: 28px;
+  background: rgba(226, 232, 240, 0.8);
+  z-index: 5;
+}
+
+.seb-wide-bar {
+  height: 100%;
+  background: #0ea5e9;
+  width: 30%;
+  position: absolute;
+  animation: slide-blue 2.5s infinite linear;
+}
+
+.seb-wide-bar-text {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  line-height: 28px;
+  font-size: 13px;
+  color: #000;
+  z-index: 6;
+  font-weight: 500;
+}
+
+@keyframes slide-blue {
+  0% { left: -30%; width: 30%; }
+  50% { left: 40%; width: 40%; }
+  100% { left: 100%; width: 30%; }
+}
+
+/* Adjust default views to support phase classes */
+.start-card, .error-card {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  background: var(--bg-card);
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
