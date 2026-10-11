@@ -1,18 +1,4 @@
-:root {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-card: #1e293b;
-  --border-color: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --danger: #ef4444;
-  --danger-hover: #dc2626;
-  --focus-ring: rgba(37, 99, 235, 0.4);
-}
-
+/* Global Reset & Base Typography */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -22,259 +8,438 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Custom drag titlebar if not fullscreen */
-.titlebar {
-  height: 32px;
-  background: var(--bg-primary);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  -webkit-app-region: drag;
-  font-size: 12px;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.titlebar-actions {
-  -webkit-app-region: no-drag;
-}
-
-.view-container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
   position: relative;
+  background-color: transparent;
 }
 
-.view {
+/* Background Phases */
+body.phase-desktop {
+  background-color: transparent !important;
+}
+body.phase-grey {
+  background-color: #d1d5db !important;
+}
+body.phase-black {
+  background-color: #000000 !important;
+}
+body.phase-unconfigured {
+  background-color: #ebebeb !important;
+}
+body.phase-exam {
+  background-color: #000000 !important;
+}
+
+/* ==========================================================================
+   1. AUTHENTIC MULTI-PHASE SPLASH SCREEN (Images 1, 2, 3, 4)
+   ========================================================================== */
+.seb-splash-container {
   display: none;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  max-width: 480px;
-  width: 100%;
-}
-
-.view.active {
-  display: flex;
-}
-
-/* Start View */
-.logo-badge {
-  display: inline-flex;
-  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  background: rgba(37, 99, 235, 0.1);
-  border: 1px solid rgba(37, 99, 235, 0.25);
-  margin-bottom: 24px;
+  align-items: center;
+  z-index: 99999;
 }
 
-.logo-badge svg {
-  width: 28px;
-  height: 28px;
-  stroke: #60a5fa;
+.seb-splash-card {
+  width: 490px;
+  height: 255px;
+  background: #ffffff;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 20;
+  border: 1px solid #d4d4d8;
 }
 
-.app-title {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  margin-bottom: 6px;
-  color: #ffffff;
+.seb-splash-body {
+  display: flex;
+  flex: 1;
+  padding: 28px 24px;
+  align-items: center;
 }
 
-.app-subtitle {
-  font-size: 14px;
-  color: var(--text-secondary);
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  margin-bottom: 36px;
+.seb-splash-logo {
+  flex: 0 0 155px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.drop-zone {
-  width: 100%;
-  border: 2px dashed var(--border-color);
-  border-radius: 12px;
-  padding: 36px 20px;
-  background: rgba(30, 41, 59, 0.5);
-  transition: all 0.2s ease;
-  cursor: pointer;
-  margin-bottom: 32px;
+.seb-logo-svg {
+  width: 135px;
+  height: 135px;
 }
 
-.drop-zone:hover, .drop-zone.dragover {
-  border-color: var(--accent);
-  background: rgba(37, 99, 235, 0.06);
+.seb-splash-info {
+  flex: 1;
+  padding-left: 20px;
 }
 
-.drop-zone-icon {
-  margin-bottom: 12px;
-  stroke: var(--text-secondary);
-}
-
-.drop-zone-text {
-  font-size: 14px;
-  color: var(--text-secondary);
+.seb-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 16px;
 }
 
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  outline: none;
-  transition: all 0.15s ease;
-  text-decoration: none;
+.seb-bold-orange {
+  font-size: 34px;
+  font-weight: 800;
+  color: #e36c09;
+  font-family: Arial, sans-serif;
+  letter-spacing: -0.5px;
 }
 
-.btn-primary {
-  background: var(--accent);
-  color: #ffffff;
-}
-
-.btn-primary:hover {
-  background: var(--accent-hover);
-}
-
-.btn-secondary {
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-}
-
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
-}
-
-.btn-danger {
-  background: var(--danger);
-  color: #ffffff;
-}
-
-.btn-danger:hover {
-  background: var(--danger-hover);
-}
-
-.footer-version {
-  position: absolute;
-  bottom: 24px;
-  font-size: 12px;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-}
-
-/* Loading View */
-.loading-title {
-  font-size: 20px;
+.seb-sub-text {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.15;
   font-weight: 600;
-  margin-bottom: 8px;
+  text-transform: uppercase;
 }
 
-.loading-subtitle {
-  font-size: 14px;
-  color: var(--text-secondary);
-  margin-bottom: 32px;
+.seb-meta-text {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.35;
 }
 
-.progress-container {
-  width: 240px;
-  height: 4px;
-  background: var(--border-color);
-  border-radius: 2px;
-  overflow: hidden;
-  position: relative;
+.seb-ver-bold {
+  font-weight: 600;
+  color: #1f2937;
 }
 
-.progress-bar-indeterminate {
+.seb-meta-dim {
+  color: #6b7280;
+}
+
+/* Green Progress Bar at Bottom of Splash */
+.seb-splash-progress {
+  width: 100%;
+  height: 14px;
+  background: #f3f4f6;
+  border-top: 1px solid #e5e7eb;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.seb-green-bar {
+  height: 100%;
+  background: #22c55e;
+  width: 0%;
+  transition: width 0.35s ease-in-out;
+}
+
+/* Wide Rotating/Sliding Blue Bar (Phase 2 & 3 - Validating remote session policy) */
+.seb-wide-bar-container {
+  display: none;
+  position: absolute;
+  top: 52%;
+  left: 0;
+  width: 100%;
+  height: 28px;
+  background: #e5e7eb;
+  z-index: 10;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.seb-wide-bar {
+  height: 100%;
+  background: #0284c7;
+  width: 32%;
+  position: absolute;
+  animation: slide-blue-bar 2.2s infinite ease-in-out;
+}
+
+.seb-wide-bar-text {
   position: absolute;
   top: 0;
-  left: 0;
-  bottom: 0;
-  width: 50%;
-  background: var(--accent);
-  border-radius: 2px;
-  animation: indeterminate 1.4s infinite ease-in-out;
+  left: 50%;
+  transform: translateX(-50%);
+  line-height: 28px;
+  font-size: 12.5px;
+  color: #111827;
+  z-index: 12;
+  font-weight: 500;
 }
 
-@keyframes indeterminate {
-  0% {
-    left: -50%;
-    width: 30%;
-  }
-  50% {
-    left: 25%;
-    width: 50%;
-  }
-  100% {
-    left: 100%;
-    width: 30%;
-  }
+@keyframes slide-blue-bar {
+  0% { left: -32%; width: 28%; }
+  50% { left: 42%; width: 38%; }
+  100% { left: 100%; width: 28%; }
 }
 
-/* Error View */
-.error-icon-box {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+/* ==========================================================================
+   2. AUTHENTIC UNCONFIGURED SEB DEFAULT PAGE (Image 6)
+   ========================================================================== */
+.view-unconfigured {
+  display: block;
+  background-color: #ebebeb;
+  height: calc(100vh - 40px);
+  width: 100vw;
+  overflow-y: auto;
+  color: #222222;
+}
+
+.seb-nav-header {
+  height: 54px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #dcdcdc;
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 24px;
+  justify-content: space-between;
+  padding: 0 40px;
 }
 
-.error-icon-box svg {
-  width: 28px;
-  height: 28px;
-  stroke: var(--danger);
-}
-
-.error-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 8px;
-}
-
-.error-message {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  margin-bottom: 24px;
-  max-width: 440px;
-}
-
-.error-actions {
+.seb-brand-left {
   display: flex;
+  align-items: center;
   gap: 12px;
 }
 
-/* Authentic Safe Exam Browser Bottom Taskbar */
+.seb-header-logo {
+  width: 36px;
+  height: 36px;
+}
+
+.seb-header-title {
+  font-size: 19px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.seb-menu-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.seb-nav-link {
+  text-decoration: none;
+  font-size: 13.5px;
+  color: #444444;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.seb-nav-link:hover {
+  color: #0284c7;
+}
+
+.caret {
+  font-size: 10px;
+  color: #777777;
+}
+
+.seb-main-content {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 20px 60px 20px;
+  position: relative;
+}
+
+.seb-lang-selector {
+  position: absolute;
+  top: 24px;
+  right: 20px;
+  font-size: 11px;
+}
+
+.seb-lang-link {
+  text-decoration: none;
+  color: #555555;
+}
+
+.seb-lang-link.active {
+  font-weight: bold;
+  color: #111111;
+}
+
+.seb-lang-sep {
+  margin: 0 4px;
+  color: #999999;
+}
+
+.seb-page-heading {
+  font-size: 23px;
+  font-weight: 600;
+  color: #333333;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.seb-warning-red {
+  color: #c00000;
+  font-size: 14.5px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.seb-section-examinee {
+  margin-bottom: 28px;
+}
+
+.seb-examinee-heading {
+  font-size: 15px;
+  font-weight: 700;
+  color: #222222;
+  margin-bottom: 8px;
+}
+
+.seb-desc-text {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #333333;
+  margin-bottom: 14px;
+}
+
+.seb-mini-icon {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.seb-mini-icon:hover svg {
+  transform: scale(1.1);
+  transition: transform 0.15s ease;
+}
+
+.seb-bullet-list {
+  padding-left: 24px;
+  margin-bottom: 24px;
+}
+
+.seb-bullet-list li {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #333333;
+  margin-bottom: 6px;
+}
+
+.seb-section-more {
+  margin-top: 32px;
+  margin-bottom: 40px;
+}
+
+.seb-more-heading {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #222222;
+  margin-bottom: 12px;
+}
+
+.seb-links-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.seb-links-list li {
+  margin-bottom: 5px;
+}
+
+.seb-links-list a {
+  text-decoration: none;
+  color: #1d70b8;
+  font-size: 13.5px;
+}
+
+.seb-links-list a:hover {
+  text-decoration: underline;
+}
+
+.seb-content-footer {
+  margin-top: 50px;
+  font-size: 12px;
+  color: #666666;
+}
+
+/* ==========================================================================
+   3. ERROR DIALOG BOX
+   ========================================================================== */
+.view-error {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - 40px);
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+.error-dialog-box {
+  width: 440px;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 4px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.error-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 44px;
+  margin: 0 auto 16px auto;
+}
+
+.error-dialog-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 10px;
+}
+
+.error-dialog-msg {
+  font-size: 13.5px;
+  color: #4b5563;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.error-dialog-btns {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.seb-std-btn {
+  padding: 8px 20px;
+  font-size: 13px;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+  font-weight: 500;
+}
+
+.seb-std-btn:hover {
+  background: #f3f4f6;
+}
+
+/* ==========================================================================
+   4. AUTHENTIC SAFE EXAM BROWSER BOTTOM TASKBAR (Images 5 & 6)
+   ========================================================================== */
 .seb-taskbar {
   display: none;
   position: fixed;
@@ -282,14 +447,13 @@ body {
   left: 0;
   right: 0;
   height: 40px;
-  background: #18181b;
-  border-top: 1px solid #27272a;
+  background: #333333;
+  border-top: 1px solid #444444;
   z-index: 99999;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
+  padding: 0 10px;
   user-select: none;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.4);
 }
 
 .seb-taskbar.visible {
@@ -302,237 +466,57 @@ body {
   gap: 12px;
 }
 
-.seb-dock-logo {
+.seb-taskbar-item {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #38bdf8;
-  letter-spacing: 0.05em;
-  padding-right: 8px;
-  border-right: 1px solid #3f3f46;
+  padding: 4px 10px;
+  border-radius: 2px;
 }
 
-.seb-dock-btn {
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  color: #e2e8f0;
-  padding: 4px 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-size: 13px;
+.seb-item-inactive {
+  background: #444444;
 }
 
-.seb-dock-btn:hover {
-  background: #27272a;
-  border-color: #3f3f46;
-}
-
-.seb-exam-label {
+.seb-taskbar-label {
   font-size: 12px;
-  color: #94a3b8;
-  max-width: 450px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: #e5e7eb;
 }
 
-.seb-status-item {
+.seb-taskbar-icon {
   display: flex;
   align-items: center;
+}
+
+.seb-taskbar-lang {
+  font-size: 12px;
+  color: #d1d5db;
+  font-weight: 500;
   padding: 0 4px;
 }
 
-.seb-clock {
-  font-size: 13px;
+.seb-taskbar-clock {
+  font-size: 12px;
   font-weight: 600;
-  color: #f1f5f9;
-  letter-spacing: 0.05em;
-  padding: 0 8px;
+  color: #f3f4f6;
   font-variant-numeric: tabular-nums;
-  border-left: 1px solid #3f3f46;
-  border-right: 1px solid #3f3f46;
+  padding: 0 6px;
 }
 
-.seb-quit-btn {
-  background: #dc2626 !important;
-  color: #ffffff !important;
-  font-weight: 600;
-  padding: 5px 14px;
-  border-radius: 4px;
-}
-
-.seb-quit-btn:hover {
-  background: #b91c1c !important;
-}
-
-
-/* Authentic SEB Splash Phases */
-body.phase-desktop {
-  background-color: transparent !important;
-}
-body.phase-grey {
-  background-color: #d4d4d8 !important;
-}
-body.phase-black {
-  background-color: #000000 !important;
-}
-body.phase-start {
-  background-color: #0f172a !important; /* Original dark */
-}
-body.phase-exam {
-  background-color: #000000 !important; /* Behind the browser view */
-}
-
-/* Splash Container */
-.seb-splash-container {
-  display: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+.seb-quit-power-btn {
+  background: transparent;
+  border: none;
+  color: #e5e7eb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;
-  z-index: 9999;
+  padding: 4px 6px;
+  border-radius: 3px;
+  transition: all 0.15s ease;
 }
 
-/* Splash Card */
-.seb-splash-card {
-  width: 480px;
-  height: 250px;
-  background: #ffffff;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.25);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 10;
-  border: 1px solid rgba(0,0,0,0.1);
-}
-
-.seb-splash-body {
-  display: flex;
-  flex: 1;
-  padding: 30px;
-  align-items: center;
-}
-
-.seb-splash-logo {
-  flex: 0 0 160px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.seb-logo-svg {
-  width: 130px;
-  height: 130px;
-}
-
-.seb-splash-info {
-  flex: 1;
-  padding-left: 20px;
-}
-
-.seb-title-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.seb-bold-orange {
-  font-size: 32px;
-  font-weight: 800;
-  color: #ea580c;
-  font-family: Arial, sans-serif;
-  letter-spacing: -0.5px;
-}
-
-.seb-sub-text {
-  font-size: 13px;
-  color: #52525b;
-  line-height: 1.1;
-  font-weight: 500;
-  text-transform: uppercase;
-}
-
-.seb-meta-text {
-  font-size: 13px;
-  color: #3f3f46;
-  line-height: 1.4;
-}
-.seb-meta-dim {
-  color: #71717a;
-}
-
-/* Splash Bottom Green Bar */
-.seb-splash-progress {
-  width: 100%;
-  height: 16px;
-  background: #f4f4f5;
-  border-top: 1px solid #e4e4e7;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-}
-.seb-green-bar {
-  height: 100%;
-  background: #22c55e;
-  width: 0%;
-  transition: width 0.4s ease;
-}
-
-/* Wide Blue Indeterminate Bar (Phase 2/3) */
-.seb-wide-bar-container {
-  display: none;
-  position: absolute;
-  top: 55%;
-  left: 0;
-  width: 100%;
-  height: 28px;
-  background: rgba(226, 232, 240, 0.8);
-  z-index: 5;
-}
-
-.seb-wide-bar {
-  height: 100%;
-  background: #0ea5e9;
-  width: 30%;
-  position: absolute;
-  animation: slide-blue 2.5s infinite linear;
-}
-
-.seb-wide-bar-text {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  line-height: 28px;
-  font-size: 13px;
-  color: #000;
-  z-index: 6;
-  font-weight: 500;
-}
-
-@keyframes slide-blue {
-  0% { left: -30%; width: 30%; }
-  50% { left: 40%; width: 40%; }
-  100% { left: 100%; width: 30%; }
-}
-
-/* Adjust default views to support phase classes */
-.start-card, .error-card {
-  max-width: 480px;
-  width: 100%;
-  text-align: center;
-  background: var(--bg-card);
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+.seb-quit-power-btn:hover {
+  background: #dc2626;
+  color: #ffffff;
 }

@@ -133,6 +133,9 @@ export class MainWindow {
 
     this.session.transitionTo(SessionState.STARTING_EXAM, { startUrl: config.startUrl });
 
+    // Allow splash sequence (Desktop -> Rotating blue -> Grey -> Black completed) to animate naturally
+    await new Promise((resolve) => setTimeout(resolve, 5200));
+
     try {
       if (!this.browserHost) {
         throw new Error('Browser host is not initialized');
