@@ -257,7 +257,14 @@ export class MainWindow {
       return true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes('ERR_ABORTED') || msg.includes('-3')) {
+      if (
+        msg.includes('ERR_ABORTED') ||
+        msg.includes('-3') ||
+        msg.includes('ERR_BLOCKED_BY_RESPONSE') ||
+        msg.includes('-27') ||
+        msg.includes('ERR_BLOCKED_BY_CLIENT') ||
+        msg.includes('-20')
+      ) {
         this.browserHost?.show();
         this.session.transitionTo(SessionState.EXAM_RUNNING, { startUrl: config.startUrl });
         return true;

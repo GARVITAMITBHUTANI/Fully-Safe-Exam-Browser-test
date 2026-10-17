@@ -52,14 +52,43 @@ export class BrowserHost {
         nodeIntegration: false,
         contextIsolation: true,
         sandbox: true,
-        webSecurity: true,
-        allowRunningInsecureContent: false,
+        webSecurity: false,
+        allowRunningInsecureContent: true,
         spellcheck: this.policy.browser.isSpellCheckEnabled(),
       },
     });
 
     const webContents = this.browserView.webContents;
     webContents.setUserAgent(customUserAgent);
+
+    // Intercept and sanitize response headers to permit embedded container editors and iframes
+    webContents.session.webRequest.onHeadersReceived((details, callback) => {
+      const responseHeaders = { ...details.responseHeaders };
+
+      for (const key of Object.keys(responseHeaders)) {
+        const lowerKey = key.toLowerCase();
+        if (
+          lowerKey === 'x-frame-options' ||
+          lowerKey === 'cross-origin-embedder-policy' ||
+          lowerKey === 'cross-origin-opener-policy' ||
+          lowerKey === 'cross-origin-resource-policy'
+        ) {
+          delete responseHeaders[key];
+        } else if (lowerKey === 'content-security-policy' || lowerKey === 'content-security-policy-report-only') {
+          // Remove frame-ancestors directive so embedded container editors are not blocked
+          const cspList = responseHeaders[key];
+          if (Array.isArray(cspList)) {
+            responseHeaders[key] = cspList.map((csp) =>
+              csp.replace(/frame-ancestors\s+[^;]+(;|$)/gi, '')
+            );
+          } else if (typeof cspList === 'string') {
+            responseHeaders[key] = [(cspList as string).replace(/frame-ancestors\s+[^;]+(;|$)/gi, '')];
+          }
+        }
+      }
+
+      callback({ responseHeaders });
+    });
 
     this.parentWindow.addBrowserView(this.browserView);
     this.resizeToParent();
@@ -192,8 +221,27 @@ export class BrowserHost {
       this.options.onPageTitleUpdated?.(title);
     });
 
-    webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+      // 1. Navigation aborted by normal redirect or stop
       if (errorCode === -3) return; // ERR_ABORTED
+
+      // 2. Ignore failures in subframes / iframes (such as container editor staging or analytics embeds)
+      if (typeof isMainFrame === 'boolean' && !isMainFrame) {
+        BrowserHost.logger.warn('BrowserHost', `Subframe failed to load: ${validatedURL}`, {
+          errorCode,
+          errorDescription,
+        });
+        return;
+      }
+
+      // 3. Ignore ERR_BLOCKED_BY_RESPONSE (-27) or ERR_BLOCKED_BY_CLIENT (-20) so transient header blocks do not abort exam
+      if (errorCode === -27 || errorCode === -20) {
+        BrowserHost.logger.warn('BrowserHost', `Main frame encountered response block (${errorCode}): ${validatedURL}`, {
+          errorCode,
+          errorDescription,
+        });
+        return;
+      }
 
       BrowserHost.logger.error('BrowserHost', `Failed to load URL: ${validatedURL}`, {
         errorCode,
@@ -225,8 +273,15 @@ export class BrowserHost {
       await this.browserView!.webContents.loadURL(url);
     } catch (err: unknown) {
       const msg = String(err);
-      if (msg.includes('ERR_ABORTED') || msg.includes('-3')) {
-        BrowserHost.logger.info('BrowserHost', `Navigation redirect in progress: ${msg}`);
+      if (
+        msg.includes('ERR_ABORTED') ||
+        msg.includes('-3') ||
+        msg.includes('ERR_BLOCKED_BY_RESPONSE') ||
+        msg.includes('-27') ||
+        msg.includes('ERR_BLOCKED_BY_CLIENT') ||
+        msg.includes('-20')
+      ) {
+        BrowserHost.logger.info('BrowserHost', `Navigation redirect/notice: ${msg}`);
         return;
       }
       throw err;
