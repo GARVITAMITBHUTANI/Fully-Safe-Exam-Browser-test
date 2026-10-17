@@ -221,7 +221,16 @@ export class BrowserHost {
     }
 
     BrowserHost.logger.info('BrowserHost', `Loading exam start URL: ${url}`);
-    await this.browserView!.webContents.loadURL(url);
+    try {
+      await this.browserView!.webContents.loadURL(url);
+    } catch (err: unknown) {
+      const msg = String(err);
+      if (msg.includes('ERR_ABORTED') || msg.includes('-3')) {
+        BrowserHost.logger.info('BrowserHost', `Navigation redirect in progress: ${msg}`);
+        return;
+      }
+      throw err;
+    }
   }
 
   public reloadExam(): void {
@@ -279,7 +288,7 @@ export class BrowserHost {
 
     const bounds = this.parentWindow.getContentBounds();
     const config = this.policy.getConfiguration();
-    const taskbarHeight = config.taskbar?.showTaskBar ? (config.taskbar.taskBarHeight || 40) : 0;
+    const taskbarHeight = config.taskbar?.showTaskBar ? (config.taskbar.taskBarHeight || 36) : 0;
     const availableWidth = Math.max(300, bounds.width - this.sidePanelWidth);
 
     this.browserView.setBounds({

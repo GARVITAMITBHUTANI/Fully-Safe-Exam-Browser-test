@@ -142,7 +142,7 @@ export const DEFAULT_EXAM_CONFIGURATION: ExamConfiguration = {
   },
   taskbar: {
     showTaskBar: true,
-    taskBarHeight: 40,
+    taskBarHeight: 36,
     showQuitButton: true,
     showReloadButton: true,
     showTime: true,

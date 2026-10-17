@@ -241,7 +241,8 @@ export class MainWindow {
         throw new Error('Browser host is not initialized');
       }
 
-      await this.browserHost.loadExamUrl(config.startUrl);
+      this.browserHost.show();
+      this.session.transitionTo(SessionState.EXAM_RUNNING, { startUrl: config.startUrl });
 
       const hostWebContents = this.browserHost.getWebContents();
       if (hostWebContents) {
@@ -252,11 +253,15 @@ export class MainWindow {
         });
       }
 
-      this.browserHost.show();
-      this.session.transitionTo(SessionState.EXAM_RUNNING, { startUrl: config.startUrl });
+      await this.browserHost.loadExamUrl(config.startUrl);
       return true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('ERR_ABORTED') || msg.includes('-3')) {
+        this.browserHost?.show();
+        this.session.transitionTo(SessionState.EXAM_RUNNING, { startUrl: config.startUrl });
+        return true;
+      }
       MainWindow.logger.error('MainWindow', `Failed to start exam session: ${msg}`);
       this.session.transitionTo(SessionState.ERROR, { error: `Failed to load exam start URL: ${msg}` });
       return false;

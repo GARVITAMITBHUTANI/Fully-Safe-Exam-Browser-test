@@ -38,7 +38,7 @@ export class NavigationGuard {
     if (
       lower.startsWith('javascript:') ||
       lower.startsWith('data:') ||
-      lower.startsWith('file:') && !this.config.startUrl.startsWith('file:')
+      (lower.startsWith('file:') && !this.config.startUrl.startsWith('file:'))
     ) {
       const reason = `Blocked potentially dangerous protocol: ${trimmed.split(':')[0]}`;
       NavigationGuard.logger.warn('NavigationGuard', reason, { url: targetUrl });
@@ -51,12 +51,24 @@ export class NavigationGuard {
         return { allowed: true, reason: 'Matches exam start URL' };
       }
 
-      // Check same origin
+      // Check same origin or base domain (for university SSO / auth subdomains)
       try {
         const startParsed = new URL(this.config.startUrl);
         const targetParsed = new URL(trimmed);
+
         if (startParsed.origin === targetParsed.origin) {
           return { allowed: true, reason: 'Matches start URL origin' };
+        }
+
+        // Allow same root domain / subdomains (e.g. auth.example.edu -> quiz.example.edu)
+        const startHostParts = startParsed.hostname.split('.');
+        const targetHostParts = targetParsed.hostname.split('.');
+        if (startHostParts.length >= 2 && targetHostParts.length >= 2) {
+          const startBaseDomain = startHostParts.slice(-2).join('.');
+          const targetBaseDomain = targetHostParts.slice(-2).join('.');
+          if (startBaseDomain === targetBaseDomain) {
+            return { allowed: true, reason: 'Matches root domain or academic SSO subdomain' };
+          }
         }
       } catch {
         // Fall through to allowedUrls check
@@ -111,4 +123,3 @@ export class NavigationGuard {
     return false;
   }
 }
-

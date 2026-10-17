@@ -15,8 +15,8 @@ export class AppConfiguration {
   public readonly metadata: AppMetadata;
 
   private constructor() {
-    const isPackaged = app ? app.isPackaged : false;
-    const userDataPath = app ? app.getPath('userData') : path.join(process.cwd(), '.fseb-data');
+    const isPackaged = app && 'isPackaged' in app ? Boolean(app.isPackaged) : false;
+    const userDataPath = app && typeof app.getPath === 'function' ? app.getPath('userData') : path.join(process.cwd(), '.fseb-data');
     const logsPath = path.join(userDataPath, 'logs');
 
     this.metadata = {
