@@ -63,6 +63,10 @@ export class ExamPolicy {
     return this.navigation.evaluateNavigation(url);
   }
 
+  public getAiPolicy() {
+    return this.config.aiPolicy;
+  }
+
   public evaluateDownload(url: string, filename: string): DownloadDecision {
     return this.download.evaluateDownload(url, filename);
   }

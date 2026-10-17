@@ -230,9 +230,49 @@ export class BrowserHost {
     }
   }
 
+  private sidePanelWidth: number = 0;
+
+  /**
+   * Captures the current visible rendered screen of the exam page as a JPEG buffer
+   */
+  public async captureScreen(): Promise<{ imageBuffer: Buffer; base64: string } | null> {
+    if (!this.browserView || !this.browserView.webContents) {
+      return null;
+    }
+    const nativeImg = await this.browserView.webContents.capturePage();
+    const imageBuffer = nativeImg.toJPEG(85);
+    const base64 = imageBuffer.toString('base64');
+    return { imageBuffer, base64 };
+  }
+
+  /**
+   * Safely extracts text content or active selection from the exam page
+   */
+  public async extractPageText(): Promise<string> {
+    if (!this.browserView || !this.browserView.webContents) {
+      return '';
+    }
+    try {
+      const text = await this.browserView.webContents.executeJavaScript(
+        'window.getSelection()?.toString() || document.body?.innerText || ""'
+      );
+      return typeof text === 'string' ? text.slice(0, 5000) : '';
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Sets the width reserved for the AI assistant side panel
+   */
+  public setSidePanelWidth(width: number): void {
+    this.sidePanelWidth = Math.max(0, width);
+    this.resizeToParent();
+  }
+
   /**
    * Resizes the embedded BrowserView to completely fill the parent window,
-   * reserving space for the authentic SEB bottom taskbar if enabled.
+   * reserving space for the authentic SEB bottom taskbar and side panel if enabled.
    */
   public resizeToParent(): void {
     if (!this.browserView || this.parentWindow.isDestroyed()) return;
@@ -240,11 +280,12 @@ export class BrowserHost {
     const bounds = this.parentWindow.getContentBounds();
     const config = this.policy.getConfiguration();
     const taskbarHeight = config.taskbar?.showTaskBar ? (config.taskbar.taskBarHeight || 40) : 0;
+    const availableWidth = Math.max(300, bounds.width - this.sidePanelWidth);
 
     this.browserView.setBounds({
       x: 0,
       y: 0,
-      width: bounds.width,
+      width: availableWidth,
       height: Math.max(100, bounds.height - taskbarHeight),
     });
   }

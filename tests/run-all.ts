@@ -2,6 +2,7 @@ import { runConfigurationTests } from './configuration.test';
 import { runPoliciesTests } from './policies.test';
 import { runNavigationTests } from './navigation.test';
 import { runSessionTests } from './session.test';
+import { runAiAssistantTests } from './test-ai-assistant';
 
 async function runAll() {
   console.log('====================================================');
@@ -13,6 +14,7 @@ async function runAll() {
     runPoliciesTests();
     runNavigationTests();
     runSessionTests();
+    await runAiAssistantTests();
 
     console.log('\n====================================================');
     console.log('       ALL TESTS COMPLETED SUCCESSFULLY (100% PASS) ');

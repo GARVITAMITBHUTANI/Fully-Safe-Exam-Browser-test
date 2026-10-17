@@ -345,6 +345,20 @@ export class SebLoader {
     const audioControlEnabled = dict['audioControlEnabled'] !== undefined ? Boolean(dict['audioControlEnabled']) : true;
     const quitUrl = (dict['quitURL'] as string) || (dict['quitUrl'] as string) || '/quit-seb';
 
+    // AI Policy mapping
+    const rawAi = (typeof dict['aiPolicy'] === 'object' && dict['aiPolicy'] !== null)
+      ? (dict['aiPolicy'] as Record<string, unknown>)
+      : {};
+    const aiPolicy = {
+      ...DEFAULT_EXAM_CONFIGURATION.aiPolicy,
+      enabled: rawAi['enabled'] !== undefined ? Boolean(rawAi['enabled']) : true,
+      gemini: rawAi['gemini'] !== undefined ? Boolean(rawAi['gemini']) : true,
+      pageContext: rawAi['pageContext'] !== undefined ? Boolean(rawAi['pageContext']) : true,
+      clipboard: rawAi['clipboard'] !== undefined ? Boolean(rawAi['clipboard']) : true,
+      screenshots: rawAi['screenshots'] !== undefined ? Boolean(rawAi['screenshots']) : true,
+      defaultModel: typeof rawAi['defaultModel'] === 'string' ? rawAi['defaultModel'] : 'gemini-2.0-flash',
+    };
+
     return {
       ...DEFAULT_EXAM_CONFIGURATION,
       startUrl,
@@ -372,6 +386,7 @@ export class SebLoader {
         audioControlEnabled,
         quitUrl,
       },
+      aiPolicy,
       compatibility: {
         sebVersion: '3.10.2',
         platform: 'SEB_Windows_3.10.2',
