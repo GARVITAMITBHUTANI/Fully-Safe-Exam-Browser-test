@@ -34,7 +34,8 @@
         "name": "Safe Exam Browser Protocol",
         "schemes": [
           "seb",
-          "sebs"
+          "sebs",
+          "seb-config"
         ]
       }
     ],
@@ -70,8 +71,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/plist": "^3.0.5",
-    "electron": "^24.21.0",
-    "electron-builder": "^24.13.3",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
     "tsx": "^4.19.0",
     "typescript": "^5.5.0"
   }

@@ -21,8 +21,15 @@ export class SebLoader {
   public static async loadFromTarget(target: string): Promise<SebLoadResult> {
     const trimmed = target.trim();
 
-    // 1. Check if it's a seb:// or sebs:// protocol URL
-    if (trimmed.startsWith('seb://') || trimmed.startsWith('sebs://')) {
+    // 1. Check if it's a seb://, sebs://, or seb-config protocol URL
+    const lower = trimmed.toLowerCase();
+    if (
+      lower.startsWith('seb://') ||
+      lower.startsWith('sebs://') ||
+      lower.startsWith('seb-config:') ||
+      lower.startsWith('seb-config?') ||
+      lower.startsWith('seb-config//')
+    ) {
       const httpUrl = this.normalizeSebUrl(trimmed);
       return this.loadFromRemoteUrl(httpUrl);
     }
@@ -38,16 +45,31 @@ export class SebLoader {
 
   public static normalizeSebUrl(url: string): string {
     const clean = url.trim();
-    if (clean.toLowerCase().startsWith('sebs://https://')) {
+    const lower = clean.toLowerCase();
+
+    if (lower.startsWith('seb-config:')) {
+      const after = clean.replace(/^seb-config:(\/\/)?/i, '');
+      if (after.startsWith('http://') || after.startsWith('https://')) {
+        return after;
+      }
+      return `https://${after}`;
+    }
+    if (lower.startsWith('seb-config?')) {
+      return `https://${clean.replace(/^seb-config\?/i, '')}`;
+    }
+    if (lower.startsWith('seb-config//')) {
+      return `https://${clean.replace(/^seb-config\/\//i, '')}`;
+    }
+    if (lower.startsWith('sebs://https://')) {
       return clean.replace(/^sebs:\/\//i, '');
     }
-    if (clean.toLowerCase().startsWith('seb://http://')) {
+    if (lower.startsWith('seb://http://')) {
       return clean.replace(/^seb:\/\//i, '');
     }
-    if (clean.toLowerCase().startsWith('sebs://')) {
+    if (lower.startsWith('sebs://')) {
       return clean.replace(/^sebs:\/\//i, 'https://');
     }
-    if (clean.toLowerCase().startsWith('seb://')) {
+    if (lower.startsWith('seb://')) {
       return clean.replace(/^seb:\/\//i, 'http://');
     }
     return clean;
@@ -356,7 +378,7 @@ export class SebLoader {
       pageContext: rawAi['pageContext'] !== undefined ? Boolean(rawAi['pageContext']) : true,
       clipboard: rawAi['clipboard'] !== undefined ? Boolean(rawAi['clipboard']) : true,
       screenshots: rawAi['screenshots'] !== undefined ? Boolean(rawAi['screenshots']) : true,
-      defaultModel: typeof rawAi['defaultModel'] === 'string' ? rawAi['defaultModel'] : 'gemini-2.0-flash',
+      defaultModel: typeof rawAi['defaultModel'] === 'string' ? rawAi['defaultModel'] : 'gemini-2.5-flash',
     };
 
     return {

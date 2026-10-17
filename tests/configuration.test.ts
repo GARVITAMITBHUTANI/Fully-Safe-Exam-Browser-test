@@ -62,5 +62,12 @@ export function runConfigurationTests() {
   const normalizedHttp = SebLoader.normalizeSebUrl(sebUrl);
   console.assert(normalizedHttp === 'http://exam.university.edu/config.seb', 'Test 7.2 Failed: seb:// should normalize to http://');
   console.log('✔ Test 7: Safe Exam Browser protocol URLs (seb:// and sebs://) correctly normalized');
+
+  // Test 8: seb-config protocol URL normalization
+  const sebConfigUrl = 'seb-config?seb_login_token=xyz123';
+  const normalizedSebConfig = SebLoader.normalizeSebUrl(sebConfigUrl);
+  console.assert(normalizedSebConfig.startsWith('https://'), 'Test 8.1 Failed: seb-config? should normalize to https://');
+  console.assert(normalizedSebConfig.includes('seb_login_token=xyz123'), 'Test 8.2 Failed: Token should be preserved');
+  console.log('✔ Test 8: seb-config protocol URL correctly normalized');
 }
 

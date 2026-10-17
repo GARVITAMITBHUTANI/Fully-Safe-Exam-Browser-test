@@ -44,7 +44,54 @@ export class GeminiService {
   }
 
   private static async callGeminiApi(request: AiAnalysisRequest): Promise<AiAnalysisResponse> {
-    const model = request.model || 'gemini-2.0-flash';
+    // Migrate deprecated gemini-2.0-flash to gemini-2.5-flash or gemini-1.5-flash
+    let requestedModel = request.model?.trim() || 'gemini-2.5-flash';
+    if (requestedModel === 'gemini-2.0-flash') {
+      requestedModel = 'gemini-2.5-flash';
+    }
+
+    // Candidate fallback models in priority order
+    const candidateModels = [
+      requestedModel,
+      'gemini-2.5-flash',
+      'gemini-1.5-flash',
+      'gemini-2.5-pro',
+      'gemini-1.5-pro',
+    ];
+
+    const modelsToTry = Array.from(new Set(candidateModels));
+    let lastError = '';
+
+    for (const model of modelsToTry) {
+      const result = await this.tryGeminiModel(request, model);
+      if (result.success) {
+        return result;
+      }
+
+      lastError = result.error || 'Failed to generate response';
+
+      // If invalid API key, quota exceeded, or content violation, fail immediately
+      const lowerErr = lastError.toLowerCase();
+      if (
+        lowerErr.includes('api_key') ||
+        lowerErr.includes('api key not valid') ||
+        lowerErr.includes('quota') ||
+        lowerErr.includes('permission_denied')
+      ) {
+        return result;
+      }
+
+      // If the model is not found / deprecated / no longer available, continue to next fallback
+      this.logger.warn('GeminiService', `Gemini model ${model} returned error: ${lastError}. Attempting fallback model...`);
+    }
+
+    return {
+      success: false,
+      error: lastError,
+    };
+  }
+
+  private static async tryGeminiModel(request: AiAnalysisRequest, model: string): Promise<AiAnalysisResponse> {
     const apiKey = request.apiKey.trim();
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
@@ -186,11 +233,9 @@ export class GeminiService {
     if (!request.customEndpoint) {
       return { success: false, error: 'Custom API endpoint URL is required.' };
     }
-    // Generic OpenAI-compatible custom endpoint (e.g. Ollama, LM Studio, vLLM)
     return this.callOpenAiApi({
       ...request,
       customEndpoint: request.customEndpoint,
     });
   }
 }
-

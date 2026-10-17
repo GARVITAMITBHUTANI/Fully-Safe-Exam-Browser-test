@@ -9,7 +9,7 @@ export class WindowsIntegration {
   /**
    * Parses command-line arguments to find a launch target:
    * - local .seb or .json file
-   * - seb:// or sebs:// protocol URL (e.g. from Chrome)
+   * - seb://, sebs://, or seb-config protocol URL (e.g. from Chrome)
    * - https:// or http:// exam URL
    */
   public static extractLaunchTarget(argv: string[]): string | null {
@@ -17,21 +17,28 @@ export class WindowsIntegration {
       if (typeof rawArg !== 'string') continue;
       const arg = rawArg.trim().replace(/^"(.*)"$/, '$1');
 
-      // 1. Protocol links from browsers (seb:// or sebs://)
-      if (arg.toLowerCase().startsWith('seb://') || arg.toLowerCase().startsWith('sebs://')) {
+      // 1. Protocol links from browsers (seb://, sebs://, seb-config:, seb-config?, etc.)
+      const lower = arg.toLowerCase();
+      if (
+        lower.startsWith('seb://') ||
+        lower.startsWith('sebs://') ||
+        lower.startsWith('seb-config:') ||
+        lower.startsWith('seb-config?') ||
+        lower.startsWith('seb-config//')
+      ) {
         this.logger.info('WindowsIntegration', `Found protocol URL target: ${arg}`);
         return arg;
       }
 
       // 2. Local exam configuration file (.seb, .json)
-      if (arg.toLowerCase().endsWith('.seb') || (arg.toLowerCase().endsWith('.json') && !arg.endsWith('package.json'))) {
+      if (lower.endsWith('.seb') || (lower.endsWith('.json') && !lower.endsWith('package.json'))) {
         const resolved = path.resolve(arg);
         this.logger.info('WindowsIntegration', `Found file target: ${resolved}`);
         return resolved;
       }
 
       // 3. Direct http/https URL passed via CLI
-      if (arg.toLowerCase().startsWith('http://') || arg.toLowerCase().startsWith('https://')) {
+      if (lower.startsWith('http://') || lower.startsWith('https://')) {
         this.logger.info('WindowsIntegration', `Found direct web URL target: ${arg}`);
         return arg;
       }
@@ -47,18 +54,28 @@ export class WindowsIntegration {
   }
 
   /**
-   * Registers FSEB with Electron as the default handler for seb:// and sebs://
+   * Registers FSEB with Electron as the default handler for seb://, sebs://, and seb-config
    */
   public static registerProtocolClients(): void {
     if (!process.platform || process.platform !== 'win32') {
       return;
     }
 
+    const protocols = ['seb', 'sebs', 'seb-config'];
+
     try {
       if (app) {
-        app.setAsDefaultProtocolClient('seb');
-        app.setAsDefaultProtocolClient('sebs');
-        this.logger.info('WindowsIntegration', 'Registered "seb://" and "sebs://" protocol clients in Electron.');
+        const isPackaged = app.isPackaged;
+        for (const proto of protocols) {
+          if (isPackaged) {
+            app.setAsDefaultProtocolClient(proto);
+          } else {
+            // In development, specify execPath and project args so Windows forwards correctly
+            const appPath = path.resolve(process.argv[1] || '.');
+            app.setAsDefaultProtocolClient(proto, process.execPath, [appPath]);
+          }
+        }
+        this.logger.info('WindowsIntegration', `Registered protocols (${protocols.join(', ')}) in Electron.`);
       }
     } catch (err) {
       this.logger.warn('WindowsIntegration', 'Failed to register protocol client with Electron', { error: String(err) });
@@ -72,17 +89,29 @@ export class WindowsIntegration {
   public static registerWindowsUserRegistry(exePath?: string): boolean {
     if (process.platform !== 'win32') return false;
 
-    const targetExe = exePath || (app ? app.getPath('exe') : process.execPath);
-    this.logger.info('WindowsIntegration', `Registering FSEB in Windows Registry for target: ${targetExe}`);
+    const isPackaged = app ? app.isPackaged : false;
+    let commandString: string;
+
+    if (exePath) {
+      commandString = `\\"${exePath}\\" \\"%1\\"`;
+    } else if (isPackaged && app) {
+      commandString = `\\"${app.getPath('exe')}\\" \\"%1\\"`;
+    } else {
+      // In development mode, command must launch electron with project directory
+      const electronExe = process.execPath;
+      const projectDir = path.resolve(process.argv[1] || '.');
+      commandString = `\\"${electronExe}\\" \\"${projectDir}\\" \\"%1\\"`;
+    }
+
+    this.logger.info('WindowsIntegration', `Registering FSEB in Windows Registry with command: ${commandString}`);
 
     try {
-      const protocols = ['seb', 'sebs'];
+      const protocols = ['seb', 'sebs', 'seb-config'];
       for (const proto of protocols) {
         const keyBase = `HKCU\\Software\\Classes\\${proto}`;
         execSync(`reg add "${keyBase}" /ve /t REG_SZ /d "URL:Safe Exam Browser Protocol" /f`, { stdio: 'ignore' });
         execSync(`reg add "${keyBase}" /v "URL Protocol" /t REG_SZ /d "" /f`, { stdio: 'ignore' });
-        execSync(`reg add "${keyBase}\\DefaultIcon" /ve /t REG_SZ /d "\\"${targetExe}\\",0" /f`, { stdio: 'ignore' });
-        execSync(`reg add "${keyBase}\\shell\\open\\command" /ve /t REG_SZ /d "\\"${targetExe}\\" \\"%1\\"" /f`, { stdio: 'ignore' });
+        execSync(`reg add "${keyBase}\\shell\\open\\command" /ve /t REG_SZ /d "${commandString}" /f`, { stdio: 'ignore' });
       }
 
       // Also register .seb file extension in HKCU
@@ -90,10 +119,9 @@ export class WindowsIntegration {
       const progIdKey = `HKCU\\Software\\Classes\\FSEB.Configuration`;
       execSync(`reg add "${fileExtKey}" /ve /t REG_SZ /d "FSEB.Configuration" /f`, { stdio: 'ignore' });
       execSync(`reg add "${progIdKey}" /ve /t REG_SZ /d "FSEB Exam Configuration File" /f`, { stdio: 'ignore' });
-      execSync(`reg add "${progIdKey}\\DefaultIcon" /ve /t REG_SZ /d "\\"${targetExe}\\",0" /f`, { stdio: 'ignore' });
-      execSync(`reg add "${progIdKey}\\shell\\open\\command" /ve /t REG_SZ /d "\\"${targetExe}\\" \\"%1\\"" /f`, { stdio: 'ignore' });
+      execSync(`reg add "${progIdKey}\\shell\\open\\command" /ve /t REG_SZ /d "${commandString}" /f`, { stdio: 'ignore' });
 
-      this.logger.info('WindowsIntegration', 'Successfully registered FSEB for seb://, sebs:// and .seb in Windows Registry.');
+      this.logger.info('WindowsIntegration', 'Successfully registered FSEB for seb, sebs, seb-config, and .seb in Windows Registry.');
       return true;
     } catch (err) {
       this.logger.error('WindowsIntegration', 'Failed to write Windows registry keys', { error: String(err) });
@@ -110,6 +138,7 @@ export class WindowsIntegration {
     try {
       execSync(`reg delete "HKCU\\Software\\Classes\\seb" /f`, { stdio: 'ignore' });
       execSync(`reg delete "HKCU\\Software\\Classes\\sebs" /f`, { stdio: 'ignore' });
+      execSync(`reg delete "HKCU\\Software\\Classes\\seb-config" /f`, { stdio: 'ignore' });
       execSync(`reg delete "HKCU\\Software\\Classes\\.seb" /f`, { stdio: 'ignore' });
       execSync(`reg delete "HKCU\\Software\\Classes\\FSEB.Configuration" /f`, { stdio: 'ignore' });
       this.logger.info('WindowsIntegration', 'Unregistered FSEB protocol handlers from Windows Registry.');

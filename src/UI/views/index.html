@@ -224,9 +224,10 @@
       <div class="ai-form-group">
         <label for="ai-model-select">Model:</label>
         <select id="ai-model-select" class="ai-input">
-          <option value="gemini-2.0-flash" selected>gemini-2.0-flash (Fast & Accurate Vision)</option>
-          <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-          <option value="gemini-1.5-pro">gemini-1.5-pro (Deep Reasoning)</option>
+          <option value="gemini-2.5-flash" selected>gemini-2.5-flash (Latest & Fast Vision)</option>
+          <option value="gemini-1.5-flash">gemini-1.5-flash (Standard Vision)</option>
+          <option value="gemini-2.5-pro">gemini-2.5-pro (Deep Reasoning)</option>
+          <option value="gemini-1.5-pro">gemini-1.5-pro</option>
         </select>
       </div>
       <div class="ai-form-group">
@@ -423,15 +424,19 @@
     function loadAiSettings() {
       const savedKey = localStorage.getItem('fseb_ai_api_key') || '';
       const savedProvider = localStorage.getItem('fseb_ai_provider') || 'gemini';
-      const savedModel = localStorage.getItem('fseb_ai_model') || 'gemini-2.0-flash';
+      let savedModel = localStorage.getItem('fseb_ai_model') || 'gemini-2.5-flash';
+      // Automatically migrate deprecated model from localStorage
+      if (savedModel === 'gemini-2.0-flash') {
+        savedModel = 'gemini-2.5-flash';
+        localStorage.setItem('fseb_ai_model', 'gemini-2.5-flash');
+      }
       const savedEndpoint = localStorage.getItem('fseb_ai_custom_endpoint') || '';
 
       aiApiKeyInput.value = savedKey;
       aiProviderSelect.value = savedProvider;
+      updateProviderUi(savedProvider);
       aiModelSelect.value = savedModel;
       aiCustomEndpointInput.value = savedEndpoint;
-
-      updateProviderUi(savedProvider);
     }
 
     function updateProviderUi(provider) {
@@ -448,9 +453,10 @@
         `;
       } else if (provider === 'gemini') {
         aiModelSelect.innerHTML = `
-          <option value="gemini-2.0-flash" selected>gemini-2.0-flash (Fast & Accurate Vision)</option>
-          <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-          <option value="gemini-1.5-pro">gemini-1.5-pro (Deep Reasoning)</option>
+          <option value="gemini-2.5-flash" selected>gemini-2.5-flash (Latest & Fast Vision)</option>
+          <option value="gemini-1.5-flash">gemini-1.5-flash (Standard Vision)</option>
+          <option value="gemini-2.5-pro">gemini-2.5-pro (Deep Reasoning)</option>
+          <option value="gemini-1.5-pro">gemini-1.5-pro</option>
         `;
       }
     }

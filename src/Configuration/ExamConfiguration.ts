@@ -156,7 +156,7 @@ export const DEFAULT_EXAM_CONFIGURATION: ExamConfiguration = {
     pageContext: true,
     clipboard: true,
     screenshots: true,
-    defaultModel: 'gemini-2.0-flash',
+    defaultModel: 'gemini-2.5-flash',
   },
   compatibility: {
     sebVersion: '3.10.2',
