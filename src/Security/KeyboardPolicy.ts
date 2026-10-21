@@ -43,14 +43,14 @@ export class KeyboardPolicy {
     const shift = Boolean(event.shift);
 
     // 1. Explicitly permitted student clipboard & editing operations
-    if (ctrl && !alt && !shift) {
-      if (key === 'c') {
+    if (ctrl && !alt) {
+      if (key === 'c' || (shift && key === 'c')) {
         if (!this.config.clipboard.copy) {
           return this.block('Copy (Ctrl+C) is disabled by exam policy.');
         }
         return { allowed: true };
       }
-      if (key === 'v') {
+      if (key === 'v' || (shift && key === 'v')) {
         if (!this.config.clipboard.paste) {
           return this.block('Paste (Ctrl+V) is disabled by exam policy.');
         }
@@ -72,6 +72,21 @@ export class KeyboardPolicy {
         // Undo / Redo
         return { allowed: true };
       }
+    }
+
+    // 1b. Alt clipboard operations (Alt+C, Alt+V, Alt+X, Alt+A, Alt alone)
+    if (alt && !ctrl && !shift) {
+      if (key === 'c' || key === 'v' || key === 'x' || key === 'a' || key === 'm' || key === 'alt') {
+        return { allowed: true };
+      }
+    }
+
+    // 1c. Alternate Windows clipboard shortcuts (Insert, ContextMenu)
+    if (key === 'insert' && (ctrl || shift)) {
+      return { allowed: true };
+    }
+    if (key === 'contextmenu') {
+      return { allowed: true };
     }
 
     // 2. Window switching: Alt+Tab, Win+Tab, and Ctrl+Win+Arrow (Virtual Desktops)

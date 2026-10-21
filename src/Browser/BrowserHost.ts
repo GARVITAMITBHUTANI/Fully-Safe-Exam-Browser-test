@@ -18,6 +18,7 @@ export class BrowserHost {
   private readonly parentWindow: BrowserWindow;
   private policy: ExamPolicy;
   private options: BrowserHostOptions;
+  private sidePanelWidth: number = 0;
 
   constructor(options: BrowserHostOptions) {
     this.options = options;
@@ -31,6 +32,99 @@ export class BrowserHost {
 
   public updatePolicy(policy: ExamPolicy): void {
     this.policy = policy;
+  }
+
+  /**
+   * Opens the universal clipboard context menu at the current cursor position.
+   * Works inside text editors, problem descriptions, and any page element.
+   */
+  public showClipboardMenu(): void {
+    if (!this.browserView || this.parentWindow.isDestroyed()) return;
+    const webContents = this.browserView.webContents;
+
+    const menu = new Menu();
+
+    menu.append(
+      new MenuItem({
+        label: 'Copy',
+        accelerator: 'CmdOrCtrl+C',
+        role: 'copy',
+        click: () => {
+          webContents.copy();
+        },
+      })
+    );
+
+    menu.append(
+      new MenuItem({
+        label: 'Paste',
+        accelerator: 'CmdOrCtrl+V',
+        role: 'paste',
+        click: () => {
+          webContents.paste();
+        },
+      })
+    );
+
+    menu.append(
+      new MenuItem({
+        label: 'Cut',
+        accelerator: 'CmdOrCtrl+X',
+        role: 'cut',
+        click: () => {
+          webContents.cut();
+        },
+      })
+    );
+
+    menu.append(
+      new MenuItem({
+        label: 'Select All',
+        accelerator: 'CmdOrCtrl+A',
+        role: 'selectAll',
+        click: () => {
+          webContents.selectAll();
+        },
+      })
+    );
+
+    menu.append(new MenuItem({ type: 'separator' }));
+
+    menu.append(
+      new MenuItem({
+        label: 'Undo',
+        accelerator: 'CmdOrCtrl+Z',
+        role: 'undo',
+        click: () => {
+          webContents.undo();
+        },
+      })
+    );
+
+    menu.append(
+      new MenuItem({
+        label: 'Redo',
+        accelerator: 'CmdOrCtrl+Y',
+        role: 'redo',
+        click: () => {
+          webContents.redo();
+        },
+      })
+    );
+
+    if (this.policy.getConfiguration().navigation.allowReload) {
+      menu.append(new MenuItem({ type: 'separator' }));
+      menu.append(
+        new MenuItem({
+          label: 'Reload Exam Page',
+          click: () => {
+            webContents.reload();
+          },
+        })
+      );
+    }
+
+    menu.popup({ window: this.parentWindow });
   }
 
   /**
@@ -50,8 +144,9 @@ export class BrowserHost {
       webPreferences: {
         preload: path.join(__dirname, '../Preload/exam-preload.js'),
         nodeIntegration: false,
+        nodeIntegrationInSubFrames: true,
         contextIsolation: true,
-        sandbox: true,
+        sandbox: false,
         webSecurity: false,
         allowRunningInsecureContent: true,
         spellcheck: this.policy.browser.isSpellCheckEnabled(),
@@ -61,8 +156,32 @@ export class BrowserHost {
     const webContents = this.browserView.webContents;
     webContents.setUserAgent(customUserAgent);
 
+    // Automatically grant clipboard reading and writing permissions for Monaco & editor iframes
+    const session = webContents.session;
+    session.setPermissionRequestHandler((_wc, permission, callback) => {
+      if (
+        permission === 'clipboard-read' ||
+        permission === 'clipboard-sanitized-write' ||
+        permission === 'media'
+      ) {
+        callback(true);
+        return;
+      }
+      callback(false);
+    });
+
+    session.setPermissionCheckHandler((_wc, permission) => {
+      if (
+        permission === 'clipboard-read' ||
+        permission === 'clipboard-sanitized-write'
+      ) {
+        return true;
+      }
+      return false;
+    });
+
     // Intercept and sanitize response headers to permit embedded container editors and iframes
-    webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    session.webRequest.onHeadersReceived((details, callback) => {
       const responseHeaders = { ...details.responseHeaders };
 
       for (const key of Object.keys(responseHeaders)) {
@@ -93,8 +212,81 @@ export class BrowserHost {
     this.parentWindow.addBrowserView(this.browserView);
     this.resizeToParent();
 
-    // 1. Keyboard event policy interception
+    // 1. Keyboard event policy interception & Alt menu trigger
+    let altPressedAlone = false;
+
     webContents.on('before-input-event', (event, input) => {
+      // Handle Alt key tap to bring up copy/clipboard menu
+      if (input.key === 'Alt') {
+        if (input.type === 'keyDown' && !input.isAutoRepeat) {
+          altPressedAlone = true;
+        } else if (input.type === 'keyUp' && altPressedAlone) {
+          altPressedAlone = false;
+          this.showClipboardMenu();
+          return;
+        }
+      } else if (input.type === 'keyDown') {
+        altPressedAlone = false;
+      }
+
+      // ContextMenu key or Shift+F10 opens copy menu
+      if (input.key === 'ContextMenu' || (input.shift && input.key === 'F10')) {
+        this.showClipboardMenu();
+        event.preventDefault();
+        return;
+      }
+
+      // Explicit native execution of Ctrl+C and Ctrl+V inside code editors & page
+      if (input.control && !input.alt && !input.meta && input.type === 'keyDown') {
+        const k = input.key.toLowerCase();
+        if (k === 'v') {
+          webContents.paste();
+          return;
+        }
+        if (k === 'c') {
+          webContents.copy();
+          return;
+        }
+        if (k === 'x') {
+          webContents.cut();
+          return;
+        }
+        if (k === 'a') {
+          webContents.selectAll();
+          return;
+        }
+      }
+
+      // Alt+C, Alt+V, Alt+X, Alt+A, Alt+M shortcuts
+      if (input.alt && !input.control && !input.meta && input.type === 'keyDown') {
+        const k = input.key.toLowerCase();
+        if (k === 'c') {
+          webContents.copy();
+          event.preventDefault();
+          return;
+        }
+        if (k === 'v') {
+          webContents.paste();
+          event.preventDefault();
+          return;
+        }
+        if (k === 'x') {
+          webContents.cut();
+          event.preventDefault();
+          return;
+        }
+        if (k === 'a') {
+          webContents.selectAll();
+          event.preventDefault();
+          return;
+        }
+        if (k === 'm') {
+          this.showClipboardMenu();
+          event.preventDefault();
+          return;
+        }
+      }
+
       const decision = this.policy.evaluateKey({
         type: input.type,
         key: input.key,
@@ -175,37 +367,9 @@ export class BrowserHost {
       }
     });
 
-    // 6. Controlled context menu (permitting copy/paste/selectAll only)
-    webContents.on('context-menu', (_event, params) => {
-      const menu = new Menu();
-
-      if (this.policy.clipboard.canCopy() && params.selectionText.trim().length > 0) {
-        menu.append(new MenuItem({ label: 'Copy', role: 'copy' }));
-      }
-
-      if (this.policy.clipboard.canPaste() && params.isEditable) {
-        menu.append(new MenuItem({ label: 'Paste', role: 'paste' }));
-      }
-
-      if (this.policy.clipboard.canSelectAll()) {
-        menu.append(new MenuItem({ label: 'Select All', role: 'selectAll' }));
-      }
-
-      // If page is allowed to reload
-      if (this.policy.getConfiguration().navigation.allowReload) {
-        menu.append(new MenuItem({ type: 'separator' }));
-        menu.append(
-          new MenuItem({
-            label: 'Reload Exam Page',
-            click: () => webContents.reload(),
-          })
-        );
-      }
-
-      // Only display menu if it has allowed actions
-      if (menu.items.length > 0) {
-        menu.popup({ window: this.parentWindow });
-      }
+    // 6. Context menu — right click anywhere brings up the full clipboard menu
+    webContents.on('context-menu', (_event, _params) => {
+      this.showClipboardMenu();
     });
 
     // 7. Loading lifecycle events
@@ -293,8 +457,6 @@ export class BrowserHost {
       this.browserView.webContents.reload();
     }
   }
-
-  private sidePanelWidth: number = 0;
 
   /**
    * Captures the current visible rendered screen of the exam page as a JPEG buffer

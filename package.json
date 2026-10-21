@@ -11,6 +11,7 @@
     "test": "tsx tests/run-all.ts",
     "register-seb": "node scripts/register-registry.js",
     "unregister-seb": "node scripts/unregister-registry.js",
+    "pack-asar": "npm run build && node scripts/pack-asar.js",
     "pack": "tsc && electron-builder --dir",
     "dist": "tsc && electron-builder"
   },
@@ -69,9 +70,10 @@
     "plist": "^3.1.0"
   },
   "devDependencies": {
+    "@electron/asar": "^3.4.1",
     "@types/node": "^22.0.0",
     "@types/plist": "^3.0.5",
-    "electron": "^44.7.0",
+    "electron": "44.7.0",
     "electron-builder": "^26.15.3",
     "tsx": "^4.19.0",
     "typescript": "^5.5.0"

@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import { app, Menu, MenuItemConstructorOptions } from 'electron';
 import { Logger } from './Core/Logger';
 import { AppConfiguration } from './Core/AppConfiguration';
 import { ExamSession, SessionState } from './Core/ExamSession';
@@ -45,6 +45,25 @@ if (!gotTheLock) {
   });
 
   app.whenReady().then(async () => {
+    // Set standard application menu with Edit accelerators so native copy/paste is bound
+    const editMenuTemplate: MenuItemConstructorOptions[] = [
+      {
+        label: 'Edit',
+        submenu: [
+          { role: 'undo' },
+          { role: 'redo' },
+          { type: 'separator' },
+          { role: 'cut' },
+          { role: 'copy' },
+          { role: 'paste' },
+          { role: 'pasteAndMatchStyle' },
+          { role: 'delete' },
+          { role: 'selectAll' },
+        ],
+      },
+    ];
+    Menu.setApplicationMenu(Menu.buildFromTemplate(editMenuTemplate));
+
     examSession = new ExamSession();
     mainWindow = new MainWindow(examSession);
 
@@ -88,4 +107,3 @@ if (!gotTheLock) {
     logger.error('Main', 'Unhandled promise rejection', { reason: String(reason) });
   });
 }
-
